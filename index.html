@@ -12,7 +12,12 @@
     h1 {
       margin-bottom: 20px;
     }
-    #reminderText, #reminderDate {
+    #reminderText {
+      width: 200px;
+      padding: 8px;
+      font-size: 14px;
+    }
+    #reminderDate, #reminderTime {
       padding: 8px;
       font-size: 14px;
     }
@@ -33,6 +38,8 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
     }
     button.delete {
       background-color: #ff5555;
@@ -40,6 +47,45 @@
       padding: 6px 10px;
       color: white;
       cursor: pointer;
+    }
+    button.fullscreen {
+      background-color: #5555ff;
+      border: none;
+      padding: 6px 10px;
+      color: white;
+      cursor: pointer;
+    }
+
+    /* Стили для полноэкранного оверлея */
+    #overlay {
+      position: fixed; 
+      top: 0; 
+      left: 0; 
+      width: 100vw; 
+      height: 100vh; 
+      background: rgba(0, 0, 0, 0.8);
+      display: none; 
+      align-items: center; 
+      justify-content: center;
+      color: #fff;
+      text-align: center;
+      padding: 20px;
+      box-sizing: border-box;
+    }
+    #overlayContent {
+      max-width: 800px;
+    }
+    #overlayContent h2 {
+      margin-bottom: 20px;
+    }
+    #closeOverlay {
+      background-color: #ff5555;
+      border: none;
+      padding: 10px 20px;
+      color: white;
+      cursor: pointer;
+      font-size: 16px;
+      margin-top: 20px;
     }
   </style>
 </head>
@@ -51,11 +97,21 @@
   <div>
     <input type="text" id="reminderText" placeholder="Текст напоминания" />
     <input type="date" id="reminderDate" />
+    <input type="time" id="reminderTime" />
     <button id="addReminder">Добавить</button>
   </div>
 
   <!-- Список напоминаний -->
   <ul id="reminderList"></ul>
+
+  <!-- Оверлей для вывода напоминаний во весь экран -->
+  <div id="overlay">
+    <div id="overlayContent">
+      <h2 id="overlayTitle"></h2>
+      <p id="overlayDateTime"></p>
+      <button id="closeOverlay">Закрыть</button>
+    </div>
+  </div>
 
   <script>
     // При загрузке страницы подгружаем напоминания из localStorage
@@ -63,8 +119,14 @@
 
     const reminderTextInput = document.getElementById('reminderText');
     const reminderDateInput = document.getElementById('reminderDate');
+    const reminderTimeInput = document.getElementById('reminderTime');
     const addReminderBtn    = document.getElementById('addReminder');
     const reminderList      = document.getElementById('reminderList');
+
+    const overlay           = document.getElementById('overlay');
+    const overlayTitle      = document.getElementById('overlayTitle');
+    const overlayDateTime   = document.getElementById('overlayDateTime');
+    const closeOverlay      = document.getElementById('closeOverlay');
 
     // Функция для сохранения массива напоминаний в localStorage
     function saveRemindersToLocalStorage() {
@@ -73,63 +135,109 @@
 
     // Функция для отображения всех напоминаний на странице
     function renderReminders() {
-      // Очищаем текущий список, чтобы перерисовать его заново
       reminderList.innerHTML = '';
 
       reminders.forEach((reminder, index) => {
         // Создаём элемент списка <li>
         const li = document.createElement('li');
         
-        // Формируем текст напоминания (если есть дата, показываем и её)
-        const textSpan = document.createElement('span');
-        textSpan.textContent = reminder.date 
-          ? `${reminder.text} (до ${reminder.date})`
-          : reminder.text;
+        // Формируем текст напоминания
+        let displayText = reminder.text;
+        if (reminder.date) {
+          displayText += ` (Дата: ${reminder.date}`;
+          if (reminder.time) {
+            displayText += `, Время: ${reminder.time}`;
+          }
+          displayText += ')';
+        }
 
-        // Кнопка для удаления
+        // Блок текста
+        const textSpan = document.createElement('span');
+        textSpan.textContent = displayText;
+
+        // Кнопка "Удалить"
         const deleteBtn = document.createElement('button');
         deleteBtn.textContent = 'Удалить';
         deleteBtn.className = 'delete';
         deleteBtn.addEventListener('click', () => {
-          // Удаляем напоминание из массива
           reminders.splice(index, 1);
           saveRemindersToLocalStorage();
           renderReminders();
         });
 
-        // Добавляем текст и кнопку удаления в элемент списка
-        li.appendChild(textSpan);
-        li.appendChild(deleteBtn);
+        // Кнопка "Во весь экран"
+        const fullscreenBtn = document.createElement('button');
+        fullscreenBtn.textContent = 'Во весь экран';
+        fullscreenBtn.className = 'fullscreen';
+        fullscreenBtn.addEventListener('click', () => {
+          openOverlay(reminder);
+        });
 
-        // Добавляем элемент <li> в <ul>
+        // Добавляем все элементы в <li> и затем в список
+        li.appendChild(textSpan);
+        li.appendChild(fullscreenBtn);
+        li.appendChild(deleteBtn);
         reminderList.appendChild(li);
       });
     }
+
+    // Функция открытия оверлея (полноэкранного отображения)
+    function openOverlay(reminder) {
+      overlayTitle.textContent = reminder.text;
+      // Выведем дату и время, если есть
+      let dateTimeInfo = '';
+      if (reminder.date) {
+        dateTimeInfo += `Дата: ${reminder.date}`;
+      }
+      if (reminder.time) {
+        dateTimeInfo += (dateTimeInfo ? ', ' : '') + `Время: ${reminder.time}`;
+      }
+      overlayDateTime.textContent = dateTimeInfo;
+
+      overlay.style.display = 'flex';
+
+      // Попробуем включить полноэкранный режим браузера
+      if (document.documentElement.requestFullscreen) {
+        document.documentElement.requestFullscreen();
+      }
+    }
+
+    // Функция закрытия оверлея
+    function closeOverlayFunc() {
+      overlay.style.display = 'none';
+      // Попробуем выйти из полноэкранного режима
+      if (document.exitFullscreen) {
+        document.exitFullscreen();
+      }
+    }
+
+    closeOverlay.addEventListener('click', closeOverlayFunc);
 
     // При клике на кнопку "Добавить"
     addReminderBtn.addEventListener('click', () => {
       const textValue = reminderTextInput.value.trim();
       const dateValue = reminderDateInput.value;
+      const timeValue = reminderTimeInput.value;
 
-      // Если пользователь ничего не ввёл — не добавляем
-      if (!textValue) return;
+      if (!textValue) return; // Если нет текста, не добавляем
 
-      // Добавляем новое напоминание в массив
+      // Добавляем новое напоминание
       reminders.push({
         text: textValue,
-        date: dateValue
+        date: dateValue,
+        time: timeValue
       });
 
-      // Сохраняем в localStorage и перерисовываем список
       saveRemindersToLocalStorage();
       renderReminders();
 
-      // Очищаем поля ввода
+      // Очищаем поля
       reminderTextInput.value = '';
       reminderDateInput.value = '';
+      reminderTimeInput.value = '';
     });
 
-    // Отображаем напоминания при первом открытии страницы
+    // Отображаем сохранённые напоминания при загрузке
     renderReminders();
   </script>
 
