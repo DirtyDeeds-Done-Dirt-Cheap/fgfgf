@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <title>Напоминания</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      margin: 40px;
+      max-width: 600px;
+    }
+    h1 {
+      margin-bottom: 20px;
+    }
+    #reminderText, #reminderDate {
+      padding: 8px;
+      font-size: 14px;
+    }
+    #addReminder {
+      padding: 8px 16px;
+      font-size: 14px;
+      margin-left: 10px;
+      cursor: pointer;
+    }
+    ul {
+      list-style-type: none;
+      padding-left: 0;
+    }
+    li {
+      background: #f5f5f5;
+      margin: 8px 0;
+      padding: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    button.delete {
+      background-color: #ff5555;
+      border: none;
+      padding: 6px 10px;
+      color: white;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Мои напоминания</h1>
+  
+  <!-- Форма добавления нового напоминания -->
+  <div>
+    <input type="text" id="reminderText" placeholder="Текст напоминания" />
+    <input type="date" id="reminderDate" />
+    <button id="addReminder">Добавить</button>
+  </div>
+
+  <!-- Список напоминаний -->
+  <ul id="reminderList"></ul>
+
+  <script>
+    // При загрузке страницы подгружаем напоминания из localStorage
+    let reminders = JSON.parse(localStorage.getItem('reminders')) || [];
+
+    const reminderTextInput = document.getElementById('reminderText');
+    const reminderDateInput = document.getElementById('reminderDate');
+    const addReminderBtn    = document.getElementById('addReminder');
+    const reminderList      = document.getElementById('reminderList');
+
+    // Функция для сохранения массива напоминаний в localStorage
+    function saveRemindersToLocalStorage() {
+      localStorage.setItem('reminders', JSON.stringify(reminders));
+    }
+
+    // Функция для отображения всех напоминаний на странице
+    function renderReminders() {
+      // Очищаем текущий список, чтобы перерисовать его заново
+      reminderList.innerHTML = '';
+
+      reminders.forEach((reminder, index) => {
+        // Создаём элемент списка <li>
+        const li = document.createElement('li');
+        
+        // Формируем текст напоминания (если есть дата, показываем и её)
+        const textSpan = document.createElement('span');
+        textSpan.textContent = reminder.date 
+          ? `${reminder.text} (до ${reminder.date})`
+          : reminder.text;
+
+        // Кнопка для удаления
+        const deleteBtn = document.createElement('button');
+        deleteBtn.textContent = 'Удалить';
+        deleteBtn.className = 'delete';
+        deleteBtn.addEventListener('click', () => {
+          // Удаляем напоминание из массива
+          reminders.splice(index, 1);
+          saveRemindersToLocalStorage();
+          renderReminders();
+        });
+
+        // Добавляем текст и кнопку удаления в элемент списка
+        li.appendChild(textSpan);
+        li.appendChild(deleteBtn);
+
+        // Добавляем элемент <li> в <ul>
+        reminderList.appendChild(li);
+      });
+    }
+
+    // При клике на кнопку "Добавить"
+    addReminderBtn.addEventListener('click', () => {
+      const textValue = reminderTextInput.value.trim();
+      const dateValue = reminderDateInput.value;
+
+      // Если пользователь ничего не ввёл — не добавляем
+      if (!textValue) return;
+
+      // Добавляем новое напоминание в массив
+      reminders.push({
+        text: textValue,
+        date: dateValue
+      });
+
+      // Сохраняем в localStorage и перерисовываем список
+      saveRemindersToLocalStorage();
+      renderReminders();
+
+      // Очищаем поля ввода
+      reminderTextInput.value = '';
+      reminderDateInput.value = '';
+    });
+
+    // Отображаем напоминания при первом открытии страницы
+    renderReminders();
+  </script>
+
+</body>
+</html>
