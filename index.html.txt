@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Программа напоминаний</title>
+</head>
+<body>
+    <h1>Программа напоминаний</h1>
+    <p>Введите время напоминания в формате: YYYY-MM-DD HH:MM</p>
+
+    <form id="reminderForm">
+        <label for="datetime">Дата и время напоминания:</label><br>
+        <input type="datetime-local" id="datetime" name="datetime" required><br><br>
+        <label for="message">Текст напоминания:</label><br>
+        <input type="text" id="message" name="message" required><br><br>
+        <input type="submit" value="Установить напоминание">
+    </form>
+
+    <h3 id="reminderStatus"></h3>
+
+    <script>
+        document.getElementById('reminderForm').addEventListener('submit', function(event) {
+            event.preventDefault(); // Не даём странице перезагрузиться
+
+            const datetimeInput = document.getElementById('datetime').value;
+            const message = document.getElementById('message').value;
+
+            const reminderTime = new Date(datetimeInput);
+            const currentTime = new Date();
+
+            if (reminderTime <= currentTime) {
+                document.getElementById('reminderStatus').textContent = 'Вы не можете установить напоминание на прошлое время.';
+                return;
+            }
+
+            const delay = reminderTime - currentTime; // время до напоминания в миллисекундах
+
+            document.getElementById('reminderStatus').textContent = `Напоминание установлено на ${reminderTime.toLocaleString()}`;
+
+            // Функция для вывода напоминания
+            setTimeout(function() {
+                alert(`Напоминание: ${message}`);
+            }, delay);
+        });
+    </script>
+</body>
+</html>
