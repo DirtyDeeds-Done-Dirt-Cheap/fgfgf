@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8" />
-  <title>Напоминания с точным временем</title>
+  <title>Напоминания + Уведомления</title>
   <style>
     body {
       font-family: sans-serif;
@@ -48,51 +48,23 @@
       color: white;
       cursor: pointer;
     }
-
-    /* Стили для полноэкранного оверлея */
-    #overlay {
-      position: fixed;
-      top: 0; 
-      left: 0; 
-      width: 100vw; 
-      height: 100vh; 
-      background: rgba(0, 0, 0, 0.8);
-      display: none; 
-      align-items: center; 
-      justify-content: center;
-      color: #fff;
-      text-align: center;
-      padding: 20px;
-      box-sizing: border-box;
-      z-index: 9999; /* поверх всего */
-    }
-    #overlayContent {
-      max-width: 800px;
-      background: rgba(0,0,0,0.2);
-      padding: 20px;
-      border-radius: 6px;
-    }
-    #overlayTitle {
-      font-size: 24px;
-      margin-bottom: 20px;
-    }
-    #overlayDateTime {
-      font-size: 18px;
-    }
-    #closeOverlay {
-      background-color: #ff5555;
+    /* Чтобы при желании пользователь мог вручную нажать на полный экран */
+    #goFullscreen {
+      background-color: #5555ff;
       border: none;
-      padding: 10px 20px;
+      padding: 8px 16px;
       color: white;
       cursor: pointer;
-      font-size: 16px;
       margin-top: 20px;
     }
   </style>
 </head>
 <body>
 
-  <h1>Мои напоминания (с точным запуском)</h1>
+  <h1>Напоминания с десктоп-уведомлениями</h1>
+  
+  <!-- Кнопка для теста полного экрана (только по клику) -->
+  <button id="goFullscreen">Войти в fullscreen</button>
   
   <!-- Форма добавления нового напоминания -->
   <div>
@@ -105,21 +77,11 @@
   <!-- Список напоминаний -->
   <ul id="reminderList"></ul>
 
-  <!-- Оверлей для вывода напоминаний во весь экран -->
-  <div id="overlay">
-    <div id="overlayContent">
-      <div id="overlayTitle"></div>
-      <div id="overlayDateTime"></div>
-      <button id="closeOverlay">Закрыть</button>
-    </div>
-  </div>
-
   <script>
-    // === ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ ===
-    // Храним список напоминаний в localStorage
+    // Храним напоминания в localStorage
     let reminders = JSON.parse(localStorage.getItem('reminders')) || [];
 
-    // Массив таймеров (setTimeout), чтобы можно было их при необходимости отменять
+    // Тут храним id'шники таймеров (чтобы сбрасывать при удалении)
     let reminderTimeouts = [];
 
     const reminderTextInput = document.getElementById('reminderText');
@@ -127,26 +89,33 @@
     const reminderTimeInput = document.getElementById('reminderTime');
     const addReminderBtn    = document.getElementById('addReminder');
     const reminderList      = document.getElementById('reminderList');
+    const goFullscreenBtn   = document.getElementById('goFullscreen');
 
-    // Оверлей (для вывода "на весь экран")
-    const overlay           = document.getElementById('overlay');
-    const overlayTitle      = document.getElementById('overlayTitle');
-    const overlayDateTime   = document.getElementById('overlayDateTime');
-    const closeOverlayBtn   = document.getElementById('closeOverlay');
+    // --- Notification API ---
+    // При загрузке пытаемся запросить разрешение (в реальном проекте лучше по кнопке)
+    document.addEventListener('DOMContentLoaded', () => {
+      if ("Notification" in window) {
+        if (Notification.permission === "default") {
+          Notification.requestPermission().then((result) => {
+            console.log("Права на уведомления:", result);
+          });
+        }
+      }
+    });
 
-    // Очередь срабатывающих напоминаний, если в один момент &laquo;выстрелили&raquo; несколько
-    let triggeredQueue      = [];
-    // Флаг: показывается ли сейчас оверлей
-    let isOverlayVisible    = false;
+    // Кнопка ручного входа в fullscreen (для теста)
+    goFullscreenBtn.addEventListener('click', () => {
+      if (document.documentElement.requestFullscreen) {
+        document.documentElement.requestFullscreen().catch(err => {
+          console.warn('Fullscreen API отклонил запрос:', err);
+        });
+      }
+    });
 
-    // === ФУНКЦИИ ===
-
-    // Сохранение массива напоминаний в localStorage
-    function saveRemindersToLocalStorage() {
+    function saveReminders() {
       localStorage.setItem('reminders', JSON.stringify(reminders));
     }
 
-    // Рендер (перерисовка) списка на странице
     function renderReminders() {
       reminderList.innerHTML = '';
 
@@ -156,9 +125,7 @@
         let displayText = reminder.text;
         if (reminder.date || reminder.time) {
           displayText += ' (';
-          if (reminder.date) {
-            displayText += `дата: ${reminder.date}`;
-          }
+          if (reminder.date) displayText += `дата: ${reminder.date}`;
           if (reminder.time) {
             if (reminder.date) displayText += ', ';
             displayText += `время: ${reminder.time}`;
@@ -173,11 +140,8 @@
         deleteBtn.textContent = 'Удалить';
         deleteBtn.className = 'delete';
         deleteBtn.addEventListener('click', () => {
-          // Удаляем из массива
           reminders.splice(index, 1);
-          saveRemindersToLocalStorage();
-
-          // Перезапускаем таймеры
+          saveReminders();
           resetAllTimers();
           renderReminders();
         });
@@ -188,128 +152,74 @@
       });
     }
 
-    // Показ оверлея (во весь экран)
-    function showOverlay(reminder) {
-      isOverlayVisible = true;
-      overlayTitle.textContent = reminder.text || '';
-      
-      let dtText = '';
-      if (reminder.date) dtText += `Дата: ${reminder.date}`;
-      if (reminder.time) {
-        dtText += (dtText ? ' / ' : '') + `Время: ${reminder.time}`;
-      }
-      overlayDateTime.textContent = dtText;
-
-      overlay.style.display = 'flex';
-
-      // Попытка перейти в fullscreen (может быть заблокировано браузером)
-      if (document.documentElement.requestFullscreen) {
-        document.documentElement.requestFullscreen().catch(err => {
-          console.warn('Fullscreen API отклонил запрос:', err);
-        });
-      }
-    }
-
-    // Закрытие оверлея
-    function hideOverlay() {
-      overlay.style.display = 'none';
-      isOverlayVisible = false;
-
-      if (document.exitFullscreen) {
-        document.exitFullscreen().catch(err => {
-          console.warn('Не удалось выйти из fullscreen:', err);
-        });
-      }
-
-      // Проверяем, не остались ли ещё &laquo;на очереди&raquo; напоминания
-      if (triggeredQueue.length > 0) {
-        const next = triggeredQueue.shift();
-        showOverlay(next);
-      }
-    }
-
-    closeOverlayBtn.addEventListener('click', hideOverlay);
-
-    // Добавление нового напоминания
+    // При добавлении
     addReminderBtn.addEventListener('click', () => {
       const textValue = reminderTextInput.value.trim();
-      const dateValue = reminderDateInput.value;   // "YYYY-MM-DD"
-      const timeValue = reminderTimeInput.value;   // "HH:MM"
+      const dateValue = reminderDateInput.value;
+      const timeValue = reminderTimeInput.value;
+      if (!textValue) return;
 
-      if (!textValue) return; // Нет текста — не добавляем
-
-      // Если у пользователя нет даты/времени — всё равно можно сохранить, но "автосработка" не произойдёт
-      reminders.push({
-        text: textValue,
-        date: dateValue,
-        time: timeValue
-      });
-
-      saveRemindersToLocalStorage();
-
-      // Перезадаём все таймеры заново (чтобы учесть новое напоминание)
+      reminders.push({ text: textValue, date: dateValue, time: timeValue });
+      saveReminders();
       resetAllTimers();
-
-      // Перерисовываем список
       renderReminders();
 
-      // Сброс полей ввода
       reminderTextInput.value = '';
       reminderDateInput.value = '';
       reminderTimeInput.value = '';
     });
 
-    // Отмена всех таймеров (clearTimeout)
     function cancelAllTimers() {
-      reminderTimeouts.forEach(t => clearTimeout(t));
+      reminderTimeouts.forEach(id => clearTimeout(id));
       reminderTimeouts = [];
     }
 
-    // Устанавливаем новый таймер для *каждого* напоминания (если время в будущем)
     function resetAllTimers() {
-      // Сначала отменяем любые старые таймеры
       cancelAllTimers();
-
       const now = new Date();
 
-      reminders.forEach((reminder, index) => {
-        if (!reminder.date && !reminder.time) {
-          // Если дата/время не указаны — автоматически не сработает
-          return;
-        }
+      reminders.forEach((reminder) => {
+        if (!reminder.date && !reminder.time) return; // нет даты/времени — не таймерим
 
-        // Формируем объект Date на основании date/time
-        let datePart = reminder.date ? reminder.date : new Date().toISOString().slice(0, 10); 
-        let timePart = reminder.time ? reminder.time : '00:00';
-        // Собираем строку в формате YYYY-MM-DDTHH:mm
-        let dateTimeString = datePart + 'T' + timePart;
-        let reminderDateObj = new Date(dateTimeString);
+        const datePart = reminder.date || new Date().toISOString().slice(0, 10);
+        const timePart = reminder.time || '00:00';
+        const dateTimeString = datePart + 'T' + timePart;
+        const reminderDateObj = new Date(dateTimeString);
 
-        // Разница между нужным моментом и сейчас
-        let diff = reminderDateObj - now;  // в миллисекундах
-
-        // Ставим таймер только если diff > 0, то есть будущее время
+        // Сколько осталось
+        let diff = reminderDateObj - now;
         if (diff > 0) {
-          // Создаём таймер
-          let timerId = setTimeout(() => {
-            // Когда таймер &laquo;сработал&raquo;, мы:
-            // 1) Удаляем напоминание из массива (чтобы не срабатывало повторно)
-            // 2) Сохраняем в localStorage
-            // 3) Пытаемся показать оверлей
-
-            // Защита от случая, если напоминание уже удалили вручную
+          // Ставим таймер
+          const timerId = setTimeout(() => {
+            // По срабатыванию:
+            // 1) удаляем напоминание
+            // 2) пытаемся вывести нативное уведомление
             const idx = reminders.indexOf(reminder);
             if (idx !== -1) {
               reminders.splice(idx, 1);
-              saveRemindersToLocalStorage();
+              saveReminders();
               renderReminders();
 
-              // Если оверлей не показан — показываем
-              // Если уже кто-то показывается — добавляем в очередь
-              if (!isOverlayVisible) {
-                showOverlay(reminder);
+              // Уведомление
+              if ("Notification" in window) {
+                if (Notification.permission === "granted") {
+                  const notification = new Notification("Напоминание", {
+                    body: reminder.text || "Сработало напоминание!",
+                    // Можно добавить иконку
+                    // icon: 'icon.png'
+                  });
+
+                  // При клике на уведомление — переходим на нашу страницу
+                  notification.onclick = () => {
+                    // В разных браузерах по-разному, 
+                    // но основная идея — фокус на вкладку
+                    window.focus();
+                    // Или, если страница в другом окне, то открыть/перейти
+                    // window.open(window.location.href, '_blank');
+                  };
+                }
               } else {
-                triggeredQueue.push(reminder);
+                alert("Напоминание: " + (reminder.text || ""));
               }
             }
           }, diff);
@@ -319,7 +229,7 @@
       });
     }
 
-    // При загрузке: отрисовать существующие напоминания и установить таймеры
+    // Первоначальная настройка при загрузке
     renderReminders();
     resetAllTimers();
   </script>
