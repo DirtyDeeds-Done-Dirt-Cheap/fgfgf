@@ -114,7 +114,7 @@
     </div>
   </div>
 
-  <!-- Звук оповещения (короткий beep). Можно заменить на свой файл или другой base64 -->
+  <!-- Звук оповещения (короткий beep). Можно заменить на свой файл -->
   <audio id="reminderSound" preload="auto">
     <!-- Маленький WAV beep-звук в base64 -->
     <source 
@@ -125,7 +125,7 @@
   </audio>
 
   <script>
-    // --- ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ ---
+    // === ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ ===
     // Храним список напоминаний в localStorage
     let reminders = JSON.parse(localStorage.getItem('reminders')) || [];
 
@@ -149,7 +149,7 @@
     // Флаг: показывается ли сейчас оверлей
     let isOverlayVisible    = false;
 
-    // --- ФУНКЦИИ ---
+    // === ФУНКЦИИ ===
 
     // Сохранение массива напоминаний в localStorage
     function saveRemindersToLocalStorage() {
@@ -197,11 +197,10 @@
       });
     }
 
-    // Функция запуска полноэкранного режима (по возможности) 
-    // и отображение оверлея с информацией о напоминании
+    // Функция показа оверлея (во весь экран) + звук
     function showOverlay(reminder) {
       isOverlayVisible = true;
-      overlayTitle.textContent    = reminder.text || '';
+      overlayTitle.textContent = reminder.text || '';
       
       let dtText = '';
       if (reminder.date) {
@@ -214,7 +213,7 @@
 
       overlay.style.display = 'flex';
 
-      // Попытаемся запросить fullscreen — может быть заблокировано браузером
+      // Попытка перейти в fullscreen (может быть заблокировано браузером)
       if (document.documentElement.requestFullscreen) {
         document.documentElement.requestFullscreen().catch(err => {
           console.warn('Fullscreen API отклонил запрос:', err);
@@ -222,7 +221,7 @@
       }
 
       // Проигрываем звуковой сигнал
-      // (может быть заблокировано, если пользователь не взаимодействовал со страницей)
+      // (может быть заблокирован, если пользователь не взаимодействовал со страницей)
       try {
         reminderSound.currentTime = 0;
         reminderSound.play();
@@ -249,7 +248,7 @@
       }
     }
 
-    // Обработчик клика кнопки "Закрыть"
+    // Обработчик кнопки "Закрыть" на оверлее
     closeOverlayBtn.addEventListener('click', hideOverlay);
 
     // Добавление нового напоминания
@@ -260,7 +259,7 @@
 
       if (!textValue) return; // Нет текста — не добавляем
 
-      // Добавляем новое напоминание в массив
+      // Добавляем новое напоминание
       reminders.push({
         text: textValue,
         date: dateValue,
@@ -282,48 +281,47 @@
       if (reminders.length === 0) return;
 
       const now = new Date();
-      
-      // Фильтр: ищем все напоминания, которые "уже пора"
-      // Время считаем "уже пора", если дата/время <= текущей
-      // Для сравнения переводим dateValue + timeValue в Date-объект
+
+      // Массив "наступивших" напоминаний
       let dueReminders = [];
+      // Массив "ещё не наступивших" напоминаний
       let notDueReminders = [];
 
       reminders.forEach(reminder => {
-        if (reminder.date || reminder.time) {
-          // Преобразуем дату и время в объект Date
-          // Если нет даты, возьмём "сегодня", если нет времени — "00:00"
-          let datePart = reminder.date ? reminder.date : new Date().toISOString().slice(0, 10); // YYYY-MM-DD
-          let timePart = reminder.time ? reminder.time : '00:00';
+        // Если нет даты и времени — никогда автоматически не сработает
+        if (!reminder.date && !reminder.time) {
+          notDueReminders.push(reminder);
+          return;
+        }
 
-          // Собираем строку в формате 'YYYY-MM-DDTHH:MM' — для создания Date
-          let dateTimeString = datePart + 'T' + timePart;
-          let reminderDateObj = new Date(dateTimeString);
+        // Преобразуем дату и время в объект Date
+        let datePart = reminder.date ? reminder.date : new Date().toISOString().slice(0, 10); 
+        let timePart = reminder.time ? reminder.time : '00:00';
 
-          // Если reminderDateObj <= now, значит пора
-          if (reminderDateObj <= now) {
-            dueReminders.push(reminder);
-          } else {
-            notDueReminders.push(reminder);
-          }
+        // Формат YYYY-MM-DDTHH:mm — из этого делаем Date
+        let dateTimeString = datePart + 'T' + timePart;
+        let reminderDateObj = new Date(dateTimeString);
+
+        // Если текущее время >= времени напоминания => пора показывать
+        // Иначе — пока не наступило
+        if (now >= reminderDateObj) {
+          dueReminders.push(reminder);
         } else {
-          // Если нет даты и времени вообще — пусть никогда не сработает автоматически
           notDueReminders.push(reminder);
         }
       });
 
-      // Все "просроченные" (или наступившие) складываем в очередь на показ
-      // и не возвращаем в основной массив
+      // Те, что пора, идут в очередь на показ (triggeredQueue)
       if (dueReminders.length > 0) {
         triggeredQueue.push(...dueReminders);
       }
 
-      // Остальные напоминания продолжаем хранить
+      // Обновляем reminders (оставляем только будущие)
       reminders = notDueReminders;
       saveRemindersToLocalStorage();
       renderReminders();
 
-      // Если сейчас не показывается оверлей — показываем первое из очереди
+      // Если сейчас оверлей не показывается — показываем первое из очереди
       if (!isOverlayVisible && triggeredQueue.length > 0) {
         const nextReminder = triggeredQueue.shift();
         showOverlay(nextReminder);
