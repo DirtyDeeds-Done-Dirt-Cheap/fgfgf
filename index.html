@@ -2,6 +2,9 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8" />
+  <!-- ВАЖНО для мобильной адаптации -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
   <title>Мои напоминания</title>
   <style>
     /* БАЗОВЫЕ СТИЛИ */
@@ -101,8 +104,16 @@
       border: none;
       border-radius: 4px;
     }
-    /* Адаптация, чтобы не перекрывать контент на очень маленьком экране */
+
+    /* --- АДАПТИВНОСТЬ ДЛЯ МОБИЛЬНЫХ --- */
     @media (max-width: 600px) {
+      .row {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .row > * {
+        flex: 1 1 auto;
+      }
       #themeToggle {
         right: 10px;
         bottom: 10px;
@@ -411,7 +422,7 @@
         if (groups.hasOwnProperty(r.category)) {
           groups[r.category].push(r);
         } else {
-          // На случай, если когда-то добавятся новые
+          // На случай, если когда-то добавятся новые категории
           if (!groups[r.category]) {
             groups[r.category] = [];
           }
@@ -523,7 +534,7 @@
       container.innerHTML = ''; // очистим
 
       const groups = groupByCategory();
-      // Пройдёмся по ключам (категориям), создадим панели
+      // Пройдёмся по ключам (категориям), создаём панели
       for (let catName in groups) {
         const arr = groups[catName];
         // Создаём панель, но только если есть хоть одно напоминание
@@ -579,6 +590,17 @@
     // =========================================================
     //         7) ИНИЦИАЛИЗАЦИЯ ПРИ ЗАГРУЗКЕ
     // =========================================================
+    // Запрашиваем разрешение на уведомления (при загрузке)
+    document.addEventListener('DOMContentLoaded', () => {
+      if ("Notification" in window) {
+        if (Notification.permission === "default") {
+          Notification.requestPermission().then((result) => {
+            console.log("Права на уведомления:", result);
+          });
+        }
+      }
+    });
+
     applyTranslations();    // Применить текст текущего языка
     renderCategories();     // Отобразить панели категорий
     resetAllTimers();       // Запустить таймеры
