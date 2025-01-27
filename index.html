@@ -2,81 +2,125 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8" />
-  <title>Напоминания (повтор, категории, переключение темы)</title>
+  <title>Мои напоминания</title>
   <style>
+    /* БАЗОВЫЕ СТИЛИ */
     body {
       font-family: sans-serif;
-      margin: 40px;
-      max-width: 600px;
+      margin: 20px;
+      padding-bottom: 80px; /* отступ снизу под кнопку темы */
+      transition: background-color 0.3s, color 0.3s;
       background-color: #fff;
       color: #000;
-      transition: background-color 0.3s, color 0.3s;
-    }
-    /* Тёмная тема */
-    body.dark {
-      background-color: #333;
-      color: #eee;
     }
     h1 {
       margin-bottom: 20px;
     }
-    .controls {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 20px;
-      flex-wrap: wrap;
-    }
-    input, select, button {
-      padding: 8px;
+    button, select, input {
       font-size: 14px;
-    }
-    #addReminder {
-      cursor: pointer;
-    }
-    #themeToggle {
-      cursor: pointer;
-      margin-left: auto; /* чтобы уехать в правый край, если нужно */
+      padding: 6px 10px;
     }
 
-    ul {
-      list-style-type: none;
-      padding-left: 0;
+    /* ТЁМНАЯ ТЕМА */
+    body.dark {
+      background-color: #333;
+      color: #eee;
     }
-    li {
-      background: #f5f5f5;
+    body.dark .category-panel {
+      background-color: #444;
+    }
+
+    /* КОНТЕЙНЕР ДЛЯ "В СТРОКУ" */
+    .row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    /* СПИСОК КАТЕГОРИЙ (ПАНЕЛИ) */
+    #categoriesContainer {
+      margin-top: 20px;
+    }
+    .category-panel {
+      margin-bottom: 10px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      overflow: hidden; /* чтобы границы учитывали содержимое */
+    }
+    .category-header {
+      margin: 0;
+      padding: 10px;
+      background-color: #f5f5f5;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    body.dark .category-header {
+      background-color: #555;
+    }
+    .category-header h2 {
+      margin: 0;
+      font-size: 16px;
+    }
+    .category-content {
+      display: none; /* По умолчанию скрыто, при нажатии открываем */
+      padding: 10px;
+    }
+    .reminder-item {
+      background-color: #fafafa;
       margin: 8px 0;
       padding: 8px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      gap: 10px;
       flex-wrap: wrap;
+      border: 1px solid #ddd;
+      border-radius: 4px;
     }
-    body.dark li {
-      background: #444;
+    body.dark .reminder-item {
+      background-color: #555;
     }
-    button.delete {
+    .delete {
       background-color: #ff5555;
       border: none;
-      padding: 6px 10px;
-      color: white;
+      color: #fff;
       cursor: pointer;
     }
 
+    /* КНОПКА СМЕНЫ ТЕМЫ ВНИЗУ СПРАВА */
+    #themeToggle {
+      position: fixed;
+      right: 20px;
+      bottom: 20px;
+      z-index: 9999;
+      background-color: #5555ff;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+    }
+    /* Адаптация, чтобы не перекрывать контент на очень маленьком экране */
+    @media (max-width: 600px) {
+      #themeToggle {
+        right: 10px;
+        bottom: 10px;
+      }
+    }
   </style>
 </head>
 <body>
 
-  <h1>Мои напоминания</h1>
+  <h1 id="title">Мои напоминания</h1>
 
-  <!-- Переключатель темы -->
-  <div class="controls">
-    <!-- Поля для ввода напоминания -->
+  <!-- Первая строка (в ряд): Поля ввода + кнопка добавления -->
+  <div class="row">
     <input type="text" id="reminderText" placeholder="Текст напоминания" />
     <input type="date" id="reminderDate" />
     <input type="time" id="reminderTime" />
 
-    <!-- Категория -->
+    <!-- Категории (фиксированный список) -->
     <select id="reminderCategory">
       <option value="Работа">Работа</option>
       <option value="Личное">Личное</option>
@@ -95,44 +139,135 @@
 
     <button id="addReminder">Добавить</button>
 
-    <!-- Кнопка для переключения темы -->
-    <button id="themeToggle">Сменить тему</button>
+    <!-- Выбор языка -->
+    <select id="languageSelect">
+      <option value="ru">Рус</option>
+      <option value="en">Eng</option>
+      <option value="uk">Укр</option>
+    </select>
   </div>
 
-  <ul id="reminderList"></ul>
+  <!-- Контейнер для панелей (каждая категория в своей) -->
+  <div id="categoriesContainer"></div>
+
+  <!-- Кнопка смены темы (внизу справа) -->
+  <button id="themeToggle">Тема</button>
 
   <script>
-    // ==============================
-    //       ХРАНЕНИЕ ДАННЫХ
-    // ==============================
+    // =========================================================
+    //             1) ДАННЫЕ И НАСТРОЙКИ
+    // =========================================================
+    // Все напоминания. Каждое — объект вида:
+    // { text, date, time, category, repeat }
     let reminders = JSON.parse(localStorage.getItem('reminders')) || [];
-    // Список таймеров (setTimeout)
+
+    // Храним идентификаторы таймеров (setTimeout), чтобы можно было отменять
     let reminderTimeouts = [];
 
-    // ==============================
-    //   ССЫЛКИ НА ЭЛЕМЕНТЫ DOM
-    // ==============================
-    const reminderTextInput   = document.getElementById('reminderText');
-    const reminderDateInput   = document.getElementById('reminderDate');
-    const reminderTimeInput   = document.getElementById('reminderTime');
-    const reminderCategorySel = document.getElementById('reminderCategory');
-    const reminderRepeatSel   = document.getElementById('reminderRepeat');
-    const addReminderBtn      = document.getElementById('addReminder');
-    const reminderList        = document.getElementById('reminderList');
-    const themeToggleBtn      = document.getElementById('themeToggle');
-
-    // ==============================
-    //       ТЕМА (СВЕТЛАЯ/ТЁМНАЯ)
-    // ==============================
-    // При загрузке проверяем localStorage
-    (function initTheme() {
-      const savedTheme = localStorage.getItem('theme');
-      if (savedTheme === 'dark') {
-        document.body.classList.add('dark');
+    // =========================================================
+    //          2) ЯЗЫК И ПЕРЕВОД ТЕКСТОВ
+    // =========================================================
+    const translations = {
+      ru: {
+        title:             "Мои напоминания",
+        placeholderText:   "Текст напоминания",
+        addBtn:            "Добавить",
+        repeatNone:        "Без повтора",
+        every10m:          "Каждые 10 минут",
+        every1h:           "Каждый час",
+        every1d:           "Каждый день",
+        every1w:           "Раз в неделю",
+        every1M:           "Каждый месяц",
+        themeBtn:          "Тема",
+        work:              "Работа",
+        personal:          "Личное",
+        study:             "Учёба",
+        deleteBtn:         "Удалить"
+      },
+      en: {
+        title:             "My Reminders",
+        placeholderText:   "Reminder text",
+        addBtn:            "Add",
+        repeatNone:        "No repeat",
+        every10m:          "Every 10 minutes",
+        every1h:           "Every hour",
+        every1d:           "Every day",
+        every1w:           "Once a week",
+        every1M:           "Every month",
+        themeBtn:          "Theme",
+        work:              "Work",
+        personal:          "Personal",
+        study:             "Study",
+        deleteBtn:         "Delete"
+      },
+      uk: {
+        title:             "Мої нагадування",
+        placeholderText:   "Текст нагадування",
+        addBtn:            "Додати",
+        repeatNone:        "Без повтору",
+        every10m:          "Кожні 10 хвилин",
+        every1h:           "Щогодини",
+        every1d:           "Щодня",
+        every1w:           "Раз на тиждень",
+        every1M:           "Щомісяця",
+        themeBtn:          "Тема",
+        work:              "Робота",
+        personal:          "Особисте",
+        study:             "Навчання",
+        deleteBtn:         "Видалити"
       }
-    })();
+    };
 
-    // По клику переключаем
+    // Текущий язык
+    let currentLang = localStorage.getItem('language') || 'ru';
+
+    // Применить переводы к статическим элементам
+    function applyTranslations() {
+      const t = translations[currentLang];
+      if (!t) return; // fallback
+
+      document.getElementById('title').textContent              = t.title;
+      document.getElementById('reminderText').placeholder       = t.placeholderText;
+      document.getElementById('addReminder').textContent        = t.addBtn;
+      document.getElementById('themeToggle').textContent        = t.themeBtn;
+
+      // Обновим варианты select с повтором
+      const repeatSelect = document.getElementById('reminderRepeat');
+      repeatSelect.options[0].text = t.repeatNone;
+      repeatSelect.options[1].text = t.every10m;
+      repeatSelect.options[2].text = t.every1h;
+      repeatSelect.options[3].text = t.every1d;
+      repeatSelect.options[4].text = t.every1w;
+      repeatSelect.options[5].text = t.every1M;
+
+      // Обновим варианты категорий
+      const catSelect = document.getElementById('reminderCategory');
+      catSelect.options[0].text = t.work;
+      catSelect.options[1].text = t.personal;
+      catSelect.options[2].text = t.study;
+    }
+
+    // Вешаем обработчик на select выбора языка
+    const languageSelect = document.getElementById('languageSelect');
+    languageSelect.value = currentLang; // чтобы в выпадающем списке отобразился текущий язык
+    languageSelect.addEventListener('change', (e) => {
+      currentLang = e.target.value;
+      localStorage.setItem('language', currentLang);
+      applyTranslations();
+      renderCategories(); // Перерисовать, чтобы кнопки "Удалить" и т.п. поменяли текст
+    });
+
+    // =========================================================
+    //          3) ПЕРЕКЛЮЧЕНИЕ ТЕМЫ (СВЕТ/ТЬМА)
+    // =========================================================
+    // Читаем из localStorage
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'dark') {
+      document.body.classList.add('dark');
+    }
+
+    // Кнопка темы (находится внизу справа)
+    const themeToggleBtn = document.getElementById('themeToggle');
     themeToggleBtn.addEventListener('click', () => {
       document.body.classList.toggle('dark');
       if (document.body.classList.contains('dark')) {
@@ -142,28 +277,22 @@
       }
     });
 
-    // ==============================
-    //  NOTIFICATION API (запрос разрешения)
-    // ==============================
-    document.addEventListener('DOMContentLoaded', () => {
-      if ("Notification" in window) {
-        if (Notification.permission === "default") {
-          Notification.requestPermission().then((result) => {
-            console.log("Права на уведомления:", result);
-          });
-        }
-      }
-    });
+    // =========================================================
+    //     4) РАБОТА С LOCALSTORAGE И СЕТТАП ТАЙМЕРОВ
+    // =========================================================
 
-    // ==============================
-    //        УТИЛИТНЫЕ ФУНКЦИИ
-    // ==============================
-    // Сохранить массив reminders в localStorage
+    // Сохраняем в localStorage
     function saveReminders() {
       localStorage.setItem('reminders', JSON.stringify(reminders));
     }
 
-    // Преобразовать Date -> строка "YYYY-MM-DD"
+    // Отменяем все активные таймеры
+    function cancelAllTimers() {
+      reminderTimeouts.forEach(id => clearTimeout(id));
+      reminderTimeouts = [];
+    }
+
+    // Формат "YYYY-MM-DD" из Date
     function formatDate(d) {
       let y = d.getFullYear();
       let m = String(d.getMonth() + 1).padStart(2, '0');
@@ -171,14 +300,14 @@
       return `${y}-${m}-${day}`;
     }
 
-    // Преобразовать Date -> строка "HH:MM"
+    // Формат "HH:MM" из Date
     function formatTime(d) {
       let hh = String(d.getHours()).padStart(2, '0');
       let mm = String(d.getMinutes()).padStart(2, '0');
       return `${hh}:${mm}`;
     }
 
-    // Добавить интервал (10 минут, 1 час, 1 день, 1 неделя, 1 месяц)
+    // Добавить интервал (для повторяющихся)
     function addIntervalToDate(dateObj, repeatCode) {
       switch (repeatCode) {
         case '10m':
@@ -194,180 +323,250 @@
           dateObj.setDate(dateObj.getDate() + 7);
           break;
         case '1M':
-          // Наивный способ добавить 1 месяц
           dateObj.setMonth(dateObj.getMonth() + 1);
           break;
       }
     }
 
-    // ==============================
-    //      РЕНДЕР СПИСКА
-    // ==============================
-    function renderReminders() {
-      reminderList.innerHTML = '';
+    // Показ десктоп-уведомления
+    function showNotification(reminder) {
+      if (!("Notification" in window)) {
+        // Если браузер совсем не поддерживает, используем alert
+        alert(reminder.text);
+        return;
+      }
 
-      reminders.forEach((reminder, index) => {
-        const li = document.createElement('li');
-
-        // Сформируем текст: "Текст (дата, время, категория, повтор)"
-        let displayText = reminder.text;
-        let details = [];
-
-        if (reminder.date) details.push(`дата: ${reminder.date}`);
-        if (reminder.time) details.push(`время: ${reminder.time}`);
-        if (reminder.category) details.push(`категория: ${reminder.category}`);
-        if (reminder.repeat && reminder.repeat !== 'none') {
-          let rep = '';
-          switch (reminder.repeat) {
-            case '10m': rep = 'каждые 10 минут'; break;
-            case '1h':  rep = 'каждый час'; break;
-            case '1d':  rep = 'каждый день'; break;
-            case '1w':  rep = 'раз в неделю'; break;
-            case '1M':  rep = 'каждый месяц'; break;
-          }
-          details.push(`повтор: ${rep}`);
-        }
-
-        if (details.length > 0) {
-          displayText += ' (';
-          displayText += details.join(', ');
-          displayText += ')';
-        }
-
-        const textSpan = document.createElement('span');
-        textSpan.textContent = displayText;
-
-        // Кнопка "Удалить"
-        const deleteBtn = document.createElement('button');
-        deleteBtn.textContent = 'Удалить';
-        deleteBtn.className = 'delete';
-        deleteBtn.addEventListener('click', () => {
-          reminders.splice(index, 1);
-          saveReminders();
-          resetAllTimers();
-          renderReminders();
+      if (Notification.permission === "granted") {
+        new Notification("Напоминание", {
+          body: reminder.text
         });
-
-        li.appendChild(textSpan);
-        li.appendChild(deleteBtn);
-        reminderList.appendChild(li);
-      });
+      } else {
+        // Если не granted, пробуем alert
+        alert(reminder.text);
+      }
     }
 
-    // ==============================
-    //   ГЛАВНАЯ ЛОГИКА С setTimeout
-    // ==============================
-    // Отмена всех существующих таймеров
-    function cancelAllTimers() {
-      reminderTimeouts.forEach(id => clearTimeout(id));
-      reminderTimeouts = [];
-    }
-
-    // Пересоздаём таймеры для всех напоминаний
+    // Запускаем таймеры для всех напоминаний
     function resetAllTimers() {
-      cancelAllTimers();
+      cancelAllTimers(); // Сначала убиваем старые
+
       const now = new Date();
-
       reminders.forEach((reminder) => {
-        // Если дата/время не указаны, таймер не ставим (только вручную удалять)
-        if (!reminder.date && !reminder.time) return;
-
-        // Формируем дату-время из reminder.date + reminder.time
-        const datePart = reminder.date || new Date().toISOString().slice(0, 10);
+        if (!reminder.date && !reminder.time) {
+          // Если не задана дата/время, не ставим таймер
+          return;
+        }
+        const datePart = reminder.date || formatDate(now);
         const timePart = reminder.time || '00:00';
         const dateTimeString = datePart + 'T' + timePart;
         const reminderDateObj = new Date(dateTimeString);
 
-        // Разница (мс)
-        let diff = reminderDateObj - now;
+        const diff = reminderDateObj - now;
         if (diff > 0) {
-          // Ставим таймер на будущее
-          let timerId = setTimeout(() => {
-            // Срабатывает уведомление
+          // Ставим таймер
+          const timerId = setTimeout(() => {
+            // По срабатыванию — уведомление
             showNotification(reminder);
 
-            // Если у напоминания есть повтор, то пересчитываем на следующий раз
+            // Если есть повтор
             if (reminder.repeat && reminder.repeat !== 'none') {
-              // Вычисляем новый dateTime
-              let newDateTime = new Date(reminderDateObj); // копия
-              addIntervalToDate(newDateTime, reminder.repeat);
+              // Двигаем дату/время на следующий раз
+              let newDT = new Date(reminderDateObj);
+              addIntervalToDate(newDT, reminder.repeat);
+              reminder.date = formatDate(newDT);
+              reminder.time = formatTime(newDT);
 
-              // Обновляем в объекте
-              reminder.date = formatDate(newDateTime);
-              reminder.time = formatTime(newDateTime);
-
-              // Снова ставим таймер (через resetAllTimers или вручную)
               saveReminders();
-              resetAllTimers();
+              resetAllTimers(); // Перезапустим снова
             } else {
-              // Нет повтора -> убираем из массива
+              // Если повтор не задан — удаляем напоминание
               const idx = reminders.indexOf(reminder);
               if (idx !== -1) {
                 reminders.splice(idx, 1);
                 saveReminders();
-                renderReminders();
               }
+              renderCategories();
             }
           }, diff);
-
           reminderTimeouts.push(timerId);
-        } else {
-          // Если время уже прошло, просто не ставим таймер
-          // (либо пользователь указал прошедшее время)
         }
       });
     }
 
-    // Функция для показа нативного уведомления
-    function showNotification(reminder) {
-      if ("Notification" in window) {
-        if (Notification.permission === "granted") {
-          const notification = new Notification("Напоминание", {
-            body: reminder.text || "Сработало напоминание!"
-            // icon: "..." // можно добавить иконку
-          });
-          notification.onclick = () => {
-            // При клике пользователь фокусируется на вкладку
-            window.focus();
-          };
+    // =========================================================
+    //        5) ОТОБРАЖЕНИЕ КАТЕГОРИЙ (РАСКРЫВАЮЩИЕСЯ)
+    // =========================================================
+
+    // Сгруппировать напоминания по категориям
+    function groupByCategory() {
+      const groups = {
+        "Работа":   [],
+        "Личное":   [],
+        "Учёба":    []
+      };
+      // Добавляем те, которые есть в массиве
+      reminders.forEach(r => {
+        // Если вдруг пришла неизвестная категория, можно игнорировать или добавить.
+        // Но в задании — фиксированные.
+        if (groups.hasOwnProperty(r.category)) {
+          groups[r.category].push(r);
         } else {
-          // Если нет разрешения, fallback - alert
-          alert("Напоминание: " + (reminder.text || ""));
+          // На случай, если когда-то добавятся новые
+          if (!groups[r.category]) {
+            groups[r.category] = [];
+          }
+          groups[r.category].push(r);
         }
-      } else {
-        // Если вообще нет Notification API
-        alert("Напоминание: " + (reminder.text || ""));
+      });
+      return groups;
+    }
+
+    // Создать DOM для одной категории (панель, которая раскрывается)
+    function createCategoryPanel(categoryName, arrReminders) {
+      // Переведём название категории по текущему языку
+      let catLabel = categoryName;
+      const t = translations[currentLang];
+      if (t) {
+        if (categoryName === 'Работа')  catLabel = t.work;
+        if (categoryName === 'Личное')  catLabel = t.personal;
+        if (categoryName === 'Учёба')   catLabel = t.study;
+      }
+
+      // Обёртка панели
+      const panel = document.createElement('div');
+      panel.className = 'category-panel';
+
+      // Заголовок (header)
+      const header = document.createElement('div');
+      header.className = 'category-header';
+
+      const h2 = document.createElement('h2');
+      h2.textContent = `${catLabel} (${arrReminders.length})`;
+
+      // Иконка или стрелка, укажем "▼" / "▲"
+      const toggleSign = document.createElement('span');
+      toggleSign.textContent = '▼';
+
+      header.appendChild(h2);
+      header.appendChild(toggleSign);
+
+      // Контейнер для содержимого
+      const content = document.createElement('div');
+      content.className = 'category-content';
+
+      // При клике на header показываем/прячем контент
+      let isOpen = false;
+      header.addEventListener('click', () => {
+        isOpen = !isOpen;
+        content.style.display = isOpen ? 'block' : 'none';
+        toggleSign.textContent = isOpen ? '▲' : '▼';
+      });
+
+      // Теперь добавим напоминания
+      arrReminders.forEach(reminder => {
+        const item = document.createElement('div');
+        item.className = 'reminder-item';
+
+        // Текст
+        let txt = reminder.text;
+        // Детали (дата, время, повтор)
+        let details = [];
+        if (reminder.date) details.push(reminder.date);
+        if (reminder.time) details.push(reminder.time);
+        if (reminder.repeat && reminder.repeat !== 'none') {
+          switch (reminder.repeat) {
+            case '10m': details.push(t ? t.every10m : 'каждые 10 минут'); break;
+            case '1h': details.push(t ? t.every1h : 'каждый час'); break;
+            case '1d': details.push(t ? t.every1d : 'каждый день'); break;
+            case '1w': details.push(t ? t.every1w : 'раз в неделю'); break;
+            case '1M': details.push(t ? t.every1M : 'каждый месяц'); break;
+          }
+        }
+
+        if (details.length > 0) {
+          txt += ' (' + details.join(', ') + ')';
+        }
+
+        const textSpan = document.createElement('span');
+        textSpan.textContent = txt;
+
+        // Кнопка удаления
+        const delBtn = document.createElement('button');
+        delBtn.className = 'delete';
+        delBtn.textContent = t ? t.deleteBtn : "Удалить";
+        delBtn.addEventListener('click', () => {
+          // Удалить из массива
+          const idx = reminders.indexOf(reminder);
+          if (idx !== -1) {
+            reminders.splice(idx, 1);
+            saveReminders();
+            resetAllTimers();
+            renderCategories();
+          }
+        });
+
+        item.appendChild(textSpan);
+        item.appendChild(delBtn);
+
+        content.appendChild(item);
+      });
+
+      panel.appendChild(header);
+      panel.appendChild(content);
+
+      return panel;
+    }
+
+    // Основная функция рендера: создаём панели по категориям
+    function renderCategories() {
+      const container = document.getElementById('categoriesContainer');
+      container.innerHTML = ''; // очистим
+
+      const groups = groupByCategory();
+      // Пройдёмся по ключам (категориям), создадим панели
+      for (let catName in groups) {
+        const arr = groups[catName];
+        // Создаём панель, но только если есть хоть одно напоминание
+        if (arr.length > 0) {
+          const panel = createCategoryPanel(catName, arr);
+          container.appendChild(panel);
+        }
       }
     }
 
-    // ==============================
-    //    ДОБАВЛЕНИЕ НАПОМИНАНИЯ
-    // ==============================
+    // =========================================================
+    //         6) ДОБАВЛЕНИЕ НОВОГО НАПОМИНАНИЯ
+    // =========================================================
+    const reminderTextInput   = document.getElementById('reminderText');
+    const reminderDateInput   = document.getElementById('reminderDate');
+    const reminderTimeInput   = document.getElementById('reminderTime');
+    const reminderCategorySel = document.getElementById('reminderCategory');
+    const reminderRepeatSel   = document.getElementById('reminderRepeat');
+    const addReminderBtn      = document.getElementById('addReminder');
+
     addReminderBtn.addEventListener('click', () => {
       const textValue   = reminderTextInput.value.trim();
-      const dateValue   = reminderDateInput.value;     // "YYYY-MM-DD"
-      const timeValue   = reminderTimeInput.value;     // "HH:MM"
-      const categoryVal = reminderCategorySel.value;   // "Работа" / "Личное" / "Учёба"
-      const repeatVal   = reminderRepeatSel.value;     // "none" / "10m" / "1h" / "1d" / "1w" / "1M"
+      const dateValue   = reminderDateInput.value;
+      const timeValue   = reminderTimeInput.value;
+      const categoryVal = reminderCategorySel.value;  // "Работа" / "Личное" / "Учёба"
+      const repeatVal   = reminderRepeatSel.value;    // "none" / "10m" / "1h" / "1d" / "1w" / "1M"
 
-      if (!textValue) return;  // Без текста не добавляем
+      if (!textValue) return;
 
-      // Добавляем новое напоминание в массив
-      const newReminder = {
+      // Добавляем новое напоминание
+      const newRem = {
         text: textValue,
         date: dateValue,
         time: timeValue,
         category: categoryVal,
         repeat: repeatVal
       };
-      reminders.push(newReminder);
+      reminders.push(newRem);
       saveReminders();
 
-      // Пересоздаём таймеры
+      // Перезапускаем таймеры и перерисовываем
       resetAllTimers();
-
-      // Перерисовываем список
-      renderReminders();
+      renderCategories();
 
       // Сброс полей
       reminderTextInput.value = '';
@@ -377,11 +576,12 @@
       reminderRepeatSel.value = 'none';
     });
 
-    // ==============================
-    //   ИНИЦИАЛИЗАЦИЯ ПРИ ЗАГРУЗКЕ
-    // ==============================
-    renderReminders();
-    resetAllTimers();
+    // =========================================================
+    //         7) ИНИЦИАЛИЗАЦИЯ ПРИ ЗАГРУЗКЕ
+    // =========================================================
+    applyTranslations();    // Применить текст текущего языка
+    renderCategories();     // Отобразить панели категорий
+    resetAllTimers();       // Запустить таймеры
   </script>
 </body>
 </html>
