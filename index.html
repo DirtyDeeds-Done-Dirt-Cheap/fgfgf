@@ -2,16 +2,14 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8" />
-  <!-- Для мобильной адаптации -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Мои напоминания</title>
   <style>
     body {
       font-family: sans-serif;
       margin: 20px;
-      padding-bottom: 120px; /* отступ снизу, чтобы кнопка/панель не перекрывали контент */
+      padding-bottom: 120px; /* чтобы кнопки снизу не налезали на контент */
       transition: background-color 0.3s, color 0.3s;
-      /* Цвета будут переопределяться через стили в JS */
       background-color: #fff; 
       color: #000;
     }
@@ -23,13 +21,14 @@
       padding: 6px 10px;
       cursor: pointer;
     }
+    /* Кнопка &laquo;Удалить&raquo; (по умолчанию) */
     button.delete {
       background-color: #ff5555;
       color: #fff;
       border: none;
     }
 
-    /* Строка для ввода */
+    /* Строка ввода */
     .row {
       display: flex;
       flex-wrap: wrap;
@@ -38,7 +37,7 @@
       margin-bottom: 16px;
     }
 
-    /* Контейнер для категорий */
+    /* Панели категорий */
     #categoriesContainer {
       margin-top: 20px;
     }
@@ -51,7 +50,7 @@
     .category-header {
       margin: 0;
       padding: 10px;
-      background-color: #f5f5f5; /* переопределяется */
+      background-color: #f5f5f5;
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -62,13 +61,11 @@
       font-size: 16px;
     }
     .category-content {
-      display: none; /* свернут */
+      display: none; 
       padding: 10px;
     }
-
-    /* Отдельный блок одного напоминания */
     .reminder-item {
-      background-color: #fafafa; /* переопределяется */
+      background-color: #fafafa;
       margin: 8px 0;
       padding: 8px;
       display: flex;
@@ -79,7 +76,7 @@
       border-radius: 4px;
     }
 
-    /* КНОПКА &laquo;ТЕМА&raquo; — снизу справа */
+    /* Кнопка &laquo;Тема&raquo; в правом нижнем углу */
     #themeToggle {
       position: fixed;
       right: 20px;
@@ -91,7 +88,7 @@
       border: none;
     }
 
-    /* ПАНЕЛЬ НАСТРОЕК ТЕМЫ */
+    /* Панель настроек темы (справа внизу) */
     #themePanel {
       position: fixed;
       bottom: 70px;
@@ -102,8 +99,8 @@
       border: 1px solid #ccc;
       border-radius: 4px;
       padding: 10px;
-      width: 250px;
-      display: none; /* по умолчанию спрятано */
+      width: 300px; /* чуть пошире, т.к. у нас много настроек */
+      display: none;
     }
     #themePanel label {
       display: block;
@@ -119,7 +116,15 @@
       margin-top: 10px;
     }
 
-    /* Адаптация под мобильные */
+    /* Кнопка выбора языка (левый нижний угол) */
+    #languageSelect {
+      position: fixed;
+      left: 20px;
+      bottom: 20px;
+      z-index: 9999;
+      cursor: pointer;
+    }
+
     @media (max-width: 600px) {
       .row {
         flex-direction: column;
@@ -136,6 +141,10 @@
         right: 10px;
         width: 90%;
       }
+      #languageSelect {
+        left: 10px;
+        bottom: 10px;
+      }
     }
   </style>
 </head>
@@ -143,7 +152,7 @@
 
   <h1 id="title">Мои напоминания</h1>
 
-  <!-- Форма для нового напоминания -->
+  <!-- Форма добавления напоминания -->
   <div class="row">
     <input type="text" id="reminderText" placeholder="Текст напоминания" />
     <input type="date" id="reminderDate" />
@@ -165,57 +174,92 @@
     </select>
 
     <button id="addReminder">Добавить</button>
-
-    <select id="languageSelect">
-      <option value="ru">Рус</option>
-      <option value="en">Eng</option>
-      <option value="uk">Укр</option>
-    </select>
   </div>
 
-  <!-- Категории + список напоминаний -->
+  <!-- Список категорий/напоминаний -->
   <div id="categoriesContainer"></div>
+
+  <!-- Выбор языка (левый нижний угол) -->
+  <select id="languageSelect">
+    <option value="ru">Рус</option>
+    <option value="en">Eng</option>
+    <option value="uk">Укр</option>
+  </select>
 
   <!-- Кнопка "Тема" -->
   <button id="themeToggle">Тема</button>
 
-  <!-- Панелька настроек темы -->
+  <!-- Панель настроек темы -->
   <div id="themePanel">
     <h3 id="themeSettingsTitle">Настройка темы</h3>
 
-    <label id="labelBodyBgColor">
-      Цвет фона страницы:
-      <input type="color" id="bodyBgColor" value="#ffffff">
+    <!-- Цвета для текст/дата/время/категория/повтор/язык -->
+    <label id="labelTextInputBg">
+      Цвет фона поля "Текст напоминания":
+      <input type="color" id="textInputBg" value="#ffffff">
+    </label>
+    <label id="labelTextInputColor">
+      Цвет текста поля "Текст напоминания":
+      <input type="color" id="textInputColor" value="#000000">
     </label>
 
-    <label id="labelBodyTextColor">
-      Цвет текста страницы:
-      <input type="color" id="bodyTextColor" value="#000000">
+    <label id="labelDateInputBg">
+      Цвет фона поля "Дата":
+      <input type="color" id="dateInputBg" value="#ffffff">
+    </label>
+    <label id="labelDateInputColor">
+      Цвет текста поля "Дата":
+      <input type="color" id="dateInputColor" value="#000000">
     </label>
 
-    <label id="labelPanelBgColor">
-      Цвет фона панели категории:
-      <input type="color" id="panelBgColor" value="#f5f5f5">
+    <label id="labelTimeInputBg">
+      Цвет фона поля "Время":
+      <input type="color" id="timeInputBg" value="#ffffff">
+    </label>
+    <label id="labelTimeInputColor">
+      Цвет текста поля "Время":
+      <input type="color" id="timeInputColor" value="#000000">
     </label>
 
-    <label id="labelItemBgColor">
-      Цвет фона напоминания:
-      <input type="color" id="itemBgColor" value="#fafafa">
+    <label id="labelCategoryBg">
+      Цвет фона поля "Категория":
+      <input type="color" id="categoryBg" value="#ffffff">
+    </label>
+    <label id="labelCategoryColor">
+      Цвет текста поля "Категория":
+      <input type="color" id="categoryColor" value="#000000">
     </label>
 
-    <label id="labelPanelTextColor">
-      Цвет текста в панелях/напоминаниях:
-      <input type="color" id="panelTextColor" value="#000000">
+    <label id="labelRepeatBg">
+      Цвет фона поля "Повтор":
+      <input type="color" id="repeatBg" value="#ffffff">
+    </label>
+    <label id="labelRepeatColor">
+      Цвет текста поля "Повтор":
+      <input type="color" id="repeatColor" value="#000000">
     </label>
 
-    <!-- НАСТРОЙКА КНОПОК -->
+    <label id="labelLangBg">
+      Цвет фона списка "Язык":
+      <input type="color" id="langBg" value="#ffffff">
+    </label>
+    <label id="labelLangColor">
+      Цвет текста списка "Язык":
+      <input type="color" id="langColor" value="#000000">
+    </label>
+
+    <!-- Цвета фона/текста кнопок "Добавить", "Удалить" + скруглённость -->
     <label id="labelAddBtnBgColor">
       Цвет фона кнопки &laquo;Добавить&raquo;:
-      <input type="color" id="addBtnBgColor" value="#008000">
+      <input type="color" id="addBtnBgColor" value="#ffffff">
     </label>
     <label id="labelAddBtnTextColor">
       Цвет текста кнопки &laquo;Добавить&raquo;:
-      <input type="color" id="addBtnTextColor" value="#ffffff">
+      <input type="color" id="addBtnTextColor" value="#000000">
+    </label>
+    <label id="labelAddBtnRadius">
+      Скруглённость кнопки &laquo;Добавить&raquo; (px):
+      <input type="number" id="addBtnRadius" value="4">
     </label>
 
     <label id="labelDeleteBtnBgColor">
@@ -226,16 +270,12 @@
       Цвет текста кнопки &laquo;Удалить&raquo;:
       <input type="color" id="deleteBtnTextColor" value="#ffffff">
     </label>
-
-    <label id="labelThemeBtnBgColor">
-      Цвет фона кнопки &laquo;Тема&raquo;:
-      <input type="color" id="themeBtnBgColor" value="#888888">
-    </label>
-    <label id="labelThemeBtnTextColor">
-      Цвет текста кнопки &laquo;Тема&raquo;:
-      <input type="color" id="themeBtnTextColor" value="#ffffff">
+    <label id="labelDeleteBtnRadius">
+      Скруглённость кнопки &laquo;Удалить&raquo; (px):
+      <input type="number" id="deleteBtnRadius" value="4">
     </label>
 
+    <!-- Пресеты (белая/чёрная) -->
     <div class="theme-presets">
       <button id="whiteThemeButton">Белая тема</button>
       <button id="blackThemeButton">Чёрная тема</button>
@@ -248,133 +288,40 @@
   </div>
 
   <script>
-    // ================ 1) ДАННЫЕ ================
+    // ========== 1) ДАННЫЕ И ПЕРЕВОД ==========
     let reminders = JSON.parse(localStorage.getItem('reminders')) || [];
     let reminderTimeouts = [];
-
-    // Текущий язык
     let currentLang = localStorage.getItem('language') || 'ru';
 
-    // ================ 2) ПЕРЕВОДЫ (ЯЗЫКИ) ================
-    const translations = {
-      ru: {
-        title:             "Мои напоминания",
-        placeholderText:   "Текст напоминания",
-        addBtn:            "Добавить",
-        repeatNone:        "Без повтора",
-        every10m:          "Каждые 10 минут",
-        every1h:           "Каждый час",
-        every1d:           "Каждый день",
-        every1w:           "Раз в неделю",
-        every1M:           "Каждый месяц",
-        themeBtn:          "Тема",
-        work:              "Работа",
-        personal:          "Личное",
-        study:             "Учёба",
-        deleteBtn:         "Удалить",
-
-        // Панель настройки темы
-        themeSettingsTitle:"Настройка темы",
-        labelBodyBgColor:  "Цвет фона страницы:",
-        labelBodyTextColor:"Цвет текста страницы:",
-        labelPanelBgColor: "Цвет фона панели категории:",
-        labelItemBgColor:  "Цвет фона напоминания:",
-        labelPanelTextColor: "Цвет текста в панелях/напоминаниях:",
-        labelAddBtnBgColor:   "Цвет фона кнопки &laquo;Добавить&raquo;:",
-        labelAddBtnTextColor: "Цвет текста кнопки &laquo;Добавить&raquo;:",
-        labelDeleteBtnBgColor: "Цвет фона кнопки &laquo;Удалить&raquo;:",
-        labelDeleteBtnTextColor:"Цвет текста кнопки &laquo;Удалить&raquo;:",
-        labelThemeBtnBgColor:  "Цвет фона кнопки &laquo;Тема&raquo;:",
-        labelThemeBtnTextColor:"Цвет текста кнопки &laquo;Тема&raquo;:",
-        whiteThemeButton:  "Белая тема",
-        blackThemeButton:  "Чёрная тема",
-        saveCustomTheme:   "Применить",
-        resetCustomTheme:  "Сбросить"
-      },
-      en: {
-        title:             "My Reminders",
-        placeholderText:   "Reminder text",
-        addBtn:            "Add",
-        repeatNone:        "No repeat",
-        every10m:          "Every 10 minutes",
-        every1h:           "Every hour",
-        every1d:           "Every day",
-        every1w:           "Once a week",
-        every1M:           "Every month",
-        themeBtn:          "Theme",
-        work:              "Work",
-        personal:          "Personal",
-        study:             "Study",
-        deleteBtn:         "Delete",
-
-        themeSettingsTitle:"Theme Settings",
-        labelBodyBgColor:  "Page background color:",
-        labelBodyTextColor:"Page text color:",
-        labelPanelBgColor: "Category panel background:",
-        labelItemBgColor:  "Reminder item background:",
-        labelPanelTextColor:"Panel/Reminder text color:",
-        labelAddBtnBgColor:   "&laquo;Add&raquo; button background:",
-        labelAddBtnTextColor: "&laquo;Add&raquo; button text color:",
-        labelDeleteBtnBgColor: "&laquo;Delete&raquo; button background:",
-        labelDeleteBtnTextColor:"&laquo;Delete&raquo; button text color:",
-        labelThemeBtnBgColor:  "&laquo;Theme&raquo; button background:",
-        labelThemeBtnTextColor:"&laquo;Theme&raquo; button text color:",
-        whiteThemeButton:  "White theme",
-        blackThemeButton:  "Black theme",
-        saveCustomTheme:   "Apply",
-        resetCustomTheme:  "Reset"
-      },
-      uk: {
-        title:             "Мої нагадування",
-        placeholderText:   "Текст нагадування",
-        addBtn:            "Додати",
-        repeatNone:        "Без повтору",
-        every10m:          "Кожні 10 хвилин",
-        every1h:           "Щогодини",
-        every1d:           "Щодня",
-        every1w:           "Раз на тиждень",
-        every1M:           "Щомісяця",
-        themeBtn:          "Тема",
-        work:              "Робота",
-        personal:          "Особисте",
-        study:             "Навчання",
-        deleteBtn:         "Видалити",
-
-        themeSettingsTitle:"Налаштування теми",
-        labelBodyBgColor:  "Колір фону сторінки:",
-        labelBodyTextColor:"Колір тексту сторінки:",
-        labelPanelBgColor: "Фон панелі категорії:",
-        labelItemBgColor:  "Фон нагадування:",
-        labelPanelTextColor:"Колір тексту панелей/нагадувань:",
-        labelAddBtnBgColor:   "Фон кнопки &laquo;Додати&raquo;:",
-        labelAddBtnTextColor: "Колір тексту кнопки &laquo;Додати&raquo;:",
-        labelDeleteBtnBgColor: "Фон кнопки &laquo;Видалити&raquo;:",
-        labelDeleteBtnTextColor:"Колір тексту кнопки &laquo;Видалити&raquo;:",
-        labelThemeBtnBgColor:  "Фон кнопки &laquo;Тема&raquo;:",
-        labelThemeBtnTextColor:"Колір тексту кнопки &laquo;Тема&raquo;:",
-        whiteThemeButton:  "Біла тема",
-        blackThemeButton:  "Чорна тема",
-        saveCustomTheme:   "Застосувати",
-        resetCustomTheme:  "Скинути"
-      }
-    };
-
-    // ============== Храним настройки цвета в localStorage ==============
+    // Будем хранить цвета в localStorage, включая настройки для input/select и radius для кнопок
     function loadCustomColors() {
       const saved = localStorage.getItem('customColors');
       if (!saved) {
+        // Дефолтные значения
         return {
-          bodyBg:   "#ffffff",
-          bodyText: "#000000",
-          panelBg:  "#f5f5f5",
-          itemBg:   "#fafafa",
-          panelText:"#000000",
-          addBtnBg: "#008000",
-          addBtnText: "#ffffff",
-          deleteBtnBg: "#ff5555",
+          // ПОЛЯ ВВОДА
+          textInputBg:   "#ffffff",
+          textInputColor:"#000000",
+          dateInputBg:   "#ffffff",
+          dateInputColor:"#000000",
+          timeInputBg:   "#ffffff",
+          timeInputColor:"#000000",
+          categoryBg:    "#ffffff",
+          categoryColor: "#000000",
+          repeatBg:      "#ffffff",
+          repeatColor:   "#000000",
+          langBg:        "#ffffff",
+          langColor:     "#000000",
+
+          // КНОПКИ: ДОБАВИТЬ
+          addBtnBg:      "#ffffff",
+          addBtnText:    "#000000",
+          addBtnRadius:  4,
+
+          // КНОПКИ: УДАЛИТЬ
+          deleteBtnBg:   "#ff5555",
           deleteBtnText: "#ffffff",
-          themeBtnBg: "#888888",
-          themeBtnText: "#ffffff"
+          deleteBtnRadius:4
         };
       }
       return JSON.parse(saved);
@@ -385,326 +332,411 @@
       localStorage.setItem('customColors', JSON.stringify(customColors));
     }
 
-    // ============== ССЫЛКИ НА ЭЛЕМЕНТЫ DOM ==============
-    const titleEl             = document.getElementById('title');
-    const reminderTextInput   = document.getElementById('reminderText');
-    const reminderDateInput   = document.getElementById('reminderDate');
-    const reminderTimeInput   = document.getElementById('reminderTime');
-    const reminderCategorySel = document.getElementById('reminderCategory');
-    const reminderRepeatSel   = document.getElementById('reminderRepeat');
-    const addReminderBtn      = document.getElementById('addReminder');
-    const languageSelect      = document.getElementById('languageSelect');
-    const categoriesContainer = document.getElementById('categoriesContainer');
+    // Пример примитивного словаря перевода (минимальный)
+    const translations = {
+      ru: {
+        title: "Мои напоминания",
+        placeholderReminder:"Текст напоминания",
+        addBtn: "Добавить",
+        themeBtn: "Тема",
+        repeatNone: "Без повтора",
+        every10m: "Каждые 10 минут",
+        every1h: "Каждый час",
+        every1d: "Каждый день",
+        every1w: "Раз в неделю",
+        every1M: "Каждый месяц",
+        work:"Работа",
+        personal:"Личное",
+        study:"Учёба",
+        deleteBtn:"Удалить",
+        themeSettingsTitle:"Настройка темы",
+        labelTextInputBg:"Цвет фона поля \"Текст напоминания\":",
+        labelTextInputColor:"Цвет текста поля \"Текст напоминания\":",
+        labelDateInputBg:"Цвет фона поля \"Дата\":",
+        labelDateInputColor:"Цвет текста поля \"Дата\":",
+        labelTimeInputBg:"Цвет фона поля \"Время\":",
+        labelTimeInputColor:"Цвет текста поля \"Время\":",
+        labelCategoryBg:"Цвет фона поля \"Категория\":",
+        labelCategoryColor:"Цвет текста поля \"Категория\":",
+        labelRepeatBg:"Цвет фона поля \"Повтор\":",
+        labelRepeatColor:"Цвет текста поля \"Повтор\":",
+        labelLangBg:"Цвет фона списка \"Язык\":",
+        labelLangColor:"Цвет текста списка \"Язык\":",
+        labelAddBtnBgColor:"Цвет фона кнопки &laquo;Добавить&raquo;:",
+        labelAddBtnTextColor:"Цвет текста кнопки &laquo;Добавить&raquo;:",
+        labelAddBtnRadius:"Скруглённость кнопки &laquo;Добавить&raquo; (px):",
+        labelDeleteBtnBgColor:"Цвет фона кнопки &laquo;Удалить&raquo;:",
+        labelDeleteBtnTextColor:"Цвет текста кнопки &laquo;Удалить&raquo;:",
+        labelDeleteBtnRadius:"Скруглённость кнопки &laquo;Удалить&raquo; (px):",
+        whiteThemeButton:"Белая тема",
+        blackThemeButton:"Чёрная тема",
+        saveCustomTheme:"Применить",
+        resetCustomTheme:"Сбросить"
+      },
+      en: {
+        title: "My Reminders",
+        placeholderReminder:"Reminder text",
+        addBtn: "Add",
+        themeBtn:"Theme",
+        repeatNone: "No repeat",
+        every10m: "Every 10 minutes",
+        every1h:  "Every hour",
+        every1d:  "Every day",
+        every1w:  "Once a week",
+        every1M:  "Every month",
+        work:"Work",
+        personal:"Personal",
+        study:"Study",
+        deleteBtn:"Delete",
+        themeSettingsTitle:"Theme Settings",
+        labelTextInputBg:"Bg color of \"Reminder text\":",
+        labelTextInputColor:"Text color of \"Reminder text\":",
+        labelDateInputBg:"Bg color of \"Date\":",
+        labelDateInputColor:"Text color of \"Date\":",
+        labelTimeInputBg:"Bg color of \"Time\":",
+        labelTimeInputColor:"Text color of \"Time\":",
+        labelCategoryBg:"Bg color of \"Category\":",
+        labelCategoryColor:"Text color of \"Category\":",
+        labelRepeatBg:"Bg color of \"Repeat\":",
+        labelRepeatColor:"Text color of \"Repeat\":",
+        labelLangBg:"Bg color of \"Language\" selector:",
+        labelLangColor:"Text color of \"Language\" selector:",
+        labelAddBtnBgColor:"&laquo;Add&raquo; button bg:",
+        labelAddBtnTextColor:"&laquo;Add&raquo; button text:",
+        labelAddBtnRadius:"&laquo;Add&raquo; button radius (px):",
+        labelDeleteBtnBgColor:"&laquo;Delete&raquo; button bg:",
+        labelDeleteBtnTextColor:"&laquo;Delete&raquo; button text:",
+        labelDeleteBtnRadius:"&laquo;Delete&raquo; button radius (px):",
+        whiteThemeButton:"White theme",
+        blackThemeButton:"Black theme",
+        saveCustomTheme:"Apply",
+        resetCustomTheme:"Reset"
+      },
+      uk: {
+        title: "Мої нагадування",
+        placeholderReminder:"Текст нагадування",
+        addBtn: "Додати",
+        themeBtn:"Тема",
+        repeatNone: "Без повтору",
+        every10m: "Кожні 10 хвилин",
+        every1h:  "Щогодини",
+        every1d:  "Щодня",
+        every1w:  "Раз на тиждень",
+        every1M:  "Щомісяця",
+        work:"Робота",
+        personal:"Особисте",
+        study:"Навчання",
+        deleteBtn:"Видалити",
+        themeSettingsTitle:"Налаштування теми",
+        labelTextInputBg:"Колір фону поля \"Текст\":",
+        labelTextInputColor:"Колір тексту поля \"Текст\":",
+        labelDateInputBg:"Колір фону поля \"Дата\":",
+        labelDateInputColor:"Колір тексту поля \"Дата\":",
+        labelTimeInputBg:"Колір фону поля \"Час\":",
+        labelTimeInputColor:"Колір тексту поля \"Час\":",
+        labelCategoryBg:"Колір фону поля \"Категорія\":",
+        labelCategoryColor:"Колір тексту поля \"Категорія\":",
+        labelRepeatBg:"Колір фону поля \"Повтор\":",
+        labelRepeatColor:"Колір тексту поля \"Повтор\":",
+        labelLangBg:"Фон списку \"Мова\":",
+        labelLangColor:"Колір тексту списку \"Мова\":",
+        labelAddBtnBgColor:"Фон кнопки &laquo;Додати&raquo;:",
+        labelAddBtnTextColor:"Колір тексту кнопки &laquo;Додати&raquo;:",
+        labelAddBtnRadius:"Округлість кнопки &laquo;Додати&raquo; (px):",
+        labelDeleteBtnBgColor:"Фон кнопки &laquo;Видалити&raquo;:",
+        labelDeleteBtnTextColor:"Колір тексту кнопки &laquo;Видалити&raquo;:",
+        labelDeleteBtnRadius:"Округлість кнопки &laquo;Видалити&raquo; (px):",
+        whiteThemeButton:"Біла тема",
+        blackThemeButton:"Чорна тема",
+        saveCustomTheme:"Застосувати",
+        resetCustomTheme:"Скинути"
+      }
+    };
 
-    const themeToggleBtn      = document.getElementById('themeToggle');
-    const themePanel          = document.getElementById('themePanel');
-    const themeSettingsTitle  = document.getElementById('themeSettingsTitle');
-
-    // Цветовые пикеры
-    const bodyBgColor      = document.getElementById('bodyBgColor');
-    const bodyTextColor    = document.getElementById('bodyTextColor');
-    const panelBgColor     = document.getElementById('panelBgColor');
-    const itemBgColor      = document.getElementById('itemBgColor');
-    const panelTextColor   = document.getElementById('panelTextColor');
-    const addBtnBgColor    = document.getElementById('addBtnBgColor');
-    const addBtnTextColor  = document.getElementById('addBtnTextColor');
-    const deleteBtnBgColor = document.getElementById('deleteBtnBgColor');
-    const deleteBtnTextColor = document.getElementById('deleteBtnTextColor');
-    const themeBtnBgColor    = document.getElementById('themeBtnBgColor');
-    const themeBtnTextColor  = document.getElementById('themeBtnTextColor');
-
-    const whiteThemeButton = document.getElementById('whiteThemeButton');
-    const blackThemeButton = document.getElementById('blackThemeButton');
-    const saveCustomTheme  = document.getElementById('saveCustomTheme');
-    const resetCustomTheme = document.getElementById('resetCustomTheme');
-
-    // Label для цветовых пикеров (меняем язык)
-    const labelBodyBgColor        = document.getElementById('labelBodyBgColor');
-    const labelBodyTextColor      = document.getElementById('labelBodyTextColor');
-    const labelPanelBgColor       = document.getElementById('labelPanelBgColor');
-    const labelItemBgColor        = document.getElementById('labelItemBgColor');
-    const labelPanelTextColor     = document.getElementById('labelPanelTextColor');
-    const labelAddBtnBgColor      = document.getElementById('labelAddBtnBgColor');
-    const labelAddBtnTextColor    = document.getElementById('labelAddBtnTextColor');
-    const labelDeleteBtnBgColor   = document.getElementById('labelDeleteBtnBgColor');
-    const labelDeleteBtnTextColor = document.getElementById('labelDeleteBtnTextColor');
-    const labelThemeBtnBgColor    = document.getElementById('labelThemeBtnBgColor');
-    const labelThemeBtnTextColor  = document.getElementById('labelThemeBtnTextColor');
-
-    // ============== 3) ПРИМЕНЕНИЕ ПЕРЕВОДОВ ==============
     function applyTranslations() {
-      const t = translations[currentLang];
-      if (!t) return;
+      const t = translations[currentLang] || translations.ru;
+      document.getElementById('title').textContent = t.title;
+      document.getElementById('reminderText').placeholder = t.placeholderReminder;
+      document.getElementById('addReminder').textContent = t.addBtn;
+      document.getElementById('themeToggle').textContent = t.themeBtn;
 
-      // Основной интерфейс
-      titleEl.textContent                    = t.title;
-      reminderTextInput.placeholder          = t.placeholderText;
-      addReminderBtn.textContent             = t.addBtn;
-      themeToggleBtn.textContent             = t.themeBtn;
-
-      // Повторы
-      reminderRepeatSel.options[0].text = t.repeatNone;
-      reminderRepeatSel.options[1].text = t.every10m;
-      reminderRepeatSel.options[2].text = t.every1h;
-      reminderRepeatSel.options[3].text = t.every1d;
-      reminderRepeatSel.options[4].text = t.every1w;
-      reminderRepeatSel.options[5].text = t.every1M;
+      // Повтор
+      reminderRepeat.options[0].text = t.repeatNone;
+      reminderRepeat.options[1].text = t.every10m;
+      reminderRepeat.options[2].text = t.every1h;
+      reminderRepeat.options[3].text = t.every1d;
+      reminderRepeat.options[4].text = t.every1w;
+      reminderRepeat.options[5].text = t.every1M;
 
       // Категории
-      reminderCategorySel.options[0].text = t.work;
-      reminderCategorySel.options[1].text = t.personal;
-      reminderCategorySel.options[2].text = t.study;
+      reminderCategory.options[0].text = t.work;
+      reminderCategory.options[1].text = t.personal;
+      reminderCategory.options[2].text = t.study;
 
-      // Панель настройки темы
-      themeSettingsTitle.textContent = t.themeSettingsTitle;
-      labelBodyBgColor.firstChild.textContent        = t.labelBodyBgColor + " ";
-      labelBodyTextColor.firstChild.textContent      = t.labelBodyTextColor + " ";
-      labelPanelBgColor.firstChild.textContent       = t.labelPanelBgColor + " ";
-      labelItemBgColor.firstChild.textContent        = t.labelItemBgColor + " ";
-      labelPanelTextColor.firstChild.textContent     = t.labelPanelTextColor + " ";
-      labelAddBtnBgColor.firstChild.textContent      = t.labelAddBtnBgColor + " ";
-      labelAddBtnTextColor.firstChild.textContent    = t.labelAddBtnTextColor + " ";
-      labelDeleteBtnBgColor.firstChild.textContent   = t.labelDeleteBtnBgColor + " ";
-      labelDeleteBtnTextColor.firstChild.textContent = t.labelDeleteBtnTextColor + " ";
-      labelThemeBtnBgColor.firstChild.textContent    = t.labelThemeBtnBgColor + " ";
-      labelThemeBtnTextColor.firstChild.textContent  = t.labelThemeBtnTextColor + " ";
+      // Лейблы в панели темы
+      document.getElementById('themeSettingsTitle').textContent = t.themeSettingsTitle;
+      document.getElementById('labelTextInputBg').firstChild.textContent = t.labelTextInputBg + " ";
+      document.getElementById('labelTextInputColor').firstChild.textContent = t.labelTextInputColor + " ";
+      document.getElementById('labelDateInputBg').firstChild.textContent = t.labelDateInputBg + " ";
+      document.getElementById('labelDateInputColor').firstChild.textContent = t.labelDateInputColor + " ";
+      document.getElementById('labelTimeInputBg').firstChild.textContent = t.labelTimeInputBg + " ";
+      document.getElementById('labelTimeInputColor').firstChild.textContent = t.labelTimeInputColor + " ";
+      document.getElementById('labelCategoryBg').firstChild.textContent = t.labelCategoryBg + " ";
+      document.getElementById('labelCategoryColor').firstChild.textContent = t.labelCategoryColor + " ";
+      document.getElementById('labelRepeatBg').firstChild.textContent = t.labelRepeatBg + " ";
+      document.getElementById('labelRepeatColor').firstChild.textContent = t.labelRepeatColor + " ";
+      document.getElementById('labelLangBg').firstChild.textContent = t.labelLangBg + " ";
+      document.getElementById('labelLangColor').firstChild.textContent = t.labelLangColor + " ";
+      document.getElementById('labelAddBtnBgColor').firstChild.textContent = t.labelAddBtnBgColor + " ";
+      document.getElementById('labelAddBtnTextColor').firstChild.textContent = t.labelAddBtnTextColor + " ";
+      document.getElementById('labelAddBtnRadius').firstChild.textContent = t.labelAddBtnRadius + " ";
+      document.getElementById('labelDeleteBtnBgColor').firstChild.textContent = t.labelDeleteBtnBgColor + " ";
+      document.getElementById('labelDeleteBtnTextColor').firstChild.textContent = t.labelDeleteBtnTextColor + " ";
+      document.getElementById('labelDeleteBtnRadius').firstChild.textContent = t.labelDeleteBtnRadius + " ";
+      document.getElementById('whiteThemeButton').textContent = t.whiteThemeButton;
+      document.getElementById('blackThemeButton').textContent = t.blackThemeButton;
+      document.getElementById('saveCustomTheme').textContent  = t.saveCustomTheme;
+      document.getElementById('resetCustomTheme').textContent = t.resetCustomTheme;
 
-      whiteThemeButton.textContent = t.whiteThemeButton;
-      blackThemeButton.textContent = t.blackThemeButton;
-      saveCustomTheme.textContent  = t.saveCustomTheme;
-      resetCustomTheme.textContent = t.resetCustomTheme;
-
-      // Перерисовать категории (кнопки &laquo;Удалить&raquo; и заголовки)
+      // Перерисовать категории, чтобы &laquo;Удалить&raquo; тоже перевелось
       renderCategories();
     }
 
-    languageSelect.value = currentLang;
-    languageSelect.addEventListener('change', e => {
-      currentLang = e.target.value;
-      localStorage.setItem('language', currentLang);
-      applyTranslations();
-    });
-
-    // ============== 4) ПРИМЕНЕНИЕ ПОЛЬЗОВАТЕЛЬСКИХ ЦВЕТОВ ==============
-    function initColorPickers() {
-      // Заполняем color-инпуты из customColors
-      bodyBgColor.value         = customColors.bodyBg;
-      bodyTextColor.value       = customColors.bodyText;
-      panelBgColor.value        = customColors.panelBg;
-      itemBgColor.value         = customColors.itemBg;
-      panelTextColor.value      = customColors.panelText;
-      addBtnBgColor.value       = customColors.addBtnBg;
-      addBtnTextColor.value     = customColors.addBtnText;
-      deleteBtnBgColor.value    = customColors.deleteBtnBg;
-      deleteBtnTextColor.value  = customColors.deleteBtnText;
-      themeBtnBgColor.value     = customColors.themeBtnBg;
-      themeBtnTextColor.value   = customColors.themeBtnText;
-    }
-
+    // ========== 2) ФУНКЦИИ ПРИМЕНЕНИЯ ЦВЕТОВ =============
     function applyCustomColors() {
-      // BODY
-      document.body.style.backgroundColor = customColors.bodyBg;
-      document.body.style.color          = customColors.bodyText;
+      // Применяем к input'ам и select'ам
+      const textInput = document.getElementById('reminderText');
+      textInput.style.backgroundColor = customColors.textInputBg;
+      textInput.style.color          = customColors.textInputColor;
 
-      // Панели категорий
-      document.querySelectorAll('.category-header').forEach(header => {
-        header.style.backgroundColor = customColors.panelBg;
-        header.style.color           = customColors.panelText;
-      });
-      // Карточки напоминаний
-      document.querySelectorAll('.reminder-item').forEach(item => {
-        item.style.backgroundColor = customColors.itemBg;
-        item.style.color           = customColors.panelText;
-      });
+      const dateInput = document.getElementById('reminderDate');
+      dateInput.style.backgroundColor = customColors.dateInputBg;
+      dateInput.style.color          = customColors.dateInputColor;
+
+      const timeInput = document.getElementById('reminderTime');
+      timeInput.style.backgroundColor = customColors.timeInputBg;
+      timeInput.style.color          = customColors.timeInputColor;
+
+      const catSelect = document.getElementById('reminderCategory');
+      catSelect.style.backgroundColor = customColors.categoryBg;
+      catSelect.style.color          = customColors.categoryColor;
+
+      const repSelect = document.getElementById('reminderRepeat');
+      repSelect.style.backgroundColor = customColors.repeatBg;
+      repSelect.style.color          = customColors.repeatColor;
+
+      const langSelect = document.getElementById('languageSelect');
+      langSelect.style.backgroundColor = customColors.langBg;
+      langSelect.style.color          = customColors.langColor;
 
       // Кнопка &laquo;Добавить&raquo;
-      addReminderBtn.style.backgroundColor = customColors.addBtnBg;
-      addReminderBtn.style.color          = customColors.addBtnText;
+      const addBtn = document.getElementById('addReminder');
+      addBtn.style.backgroundColor = customColors.addBtnBg;
+      addBtn.style.color           = customColors.addBtnText;
+      addBtn.style.borderRadius    = customColors.addBtnRadius + "px";
 
       // Кнопки &laquo;Удалить&raquo;
       document.querySelectorAll('button.delete').forEach(delBtn => {
         delBtn.style.backgroundColor = customColors.deleteBtnBg;
         delBtn.style.color           = customColors.deleteBtnText;
+        delBtn.style.borderRadius    = customColors.deleteBtnRadius + "px";
       });
-
-      // Кнопка &laquo;Тема&raquo;
-      themeToggleBtn.style.backgroundColor = customColors.themeBtnBg;
-      themeToggleBtn.style.color           = customColors.themeBtnText;
     }
 
-    // ============== 5) ПРЕСЕТЫ (Белая/Чёрная тема) ==============
-    whiteThemeButton.addEventListener('click', () => {
-      // Устанавливаем &laquo;белый&raquo; пресет
-      bodyBgColor.value         = "#ffffff";
-      bodyTextColor.value       = "#000000";
-      panelBgColor.value        = "#f5f5f5";
-      itemBgColor.value         = "#fafafa";
-      panelTextColor.value      = "#000000";
+    // ========== 3) ИНИЦИАЛИЗАЦИЯ ПОЛЕЙ В ПАНЕЛИ =============
+    function initColorPickers() {
+      document.getElementById('textInputBg').value    = customColors.textInputBg;
+      document.getElementById('textInputColor').value = customColors.textInputColor;
+      document.getElementById('dateInputBg').value    = customColors.dateInputBg;
+      document.getElementById('dateInputColor').value = customColors.dateInputColor;
+      document.getElementById('timeInputBg').value    = customColors.timeInputBg;
+      document.getElementById('timeInputColor').value = customColors.timeInputColor;
+      document.getElementById('categoryBg').value     = customColors.categoryBg;
+      document.getElementById('categoryColor').value  = customColors.categoryColor;
+      document.getElementById('repeatBg').value       = customColors.repeatBg;
+      document.getElementById('repeatColor').value    = customColors.repeatColor;
+      document.getElementById('langBg').value         = customColors.langBg;
+      document.getElementById('langColor').value      = customColors.langColor;
 
-      // Кнопка &laquo;Добавить&raquo; становится белой
-      addBtnBgColor.value       = "#ffffff";
-      addBtnTextColor.value     = "#000000";
+      document.getElementById('addBtnBgColor').value     = customColors.addBtnBg;
+      document.getElementById('addBtnTextColor').value   = customColors.addBtnText;
+      document.getElementById('addBtnRadius').value      = customColors.addBtnRadius;
+      document.getElementById('deleteBtnBgColor').value  = customColors.deleteBtnBg;
+      document.getElementById('deleteBtnTextColor').value= customColors.deleteBtnText;
+      document.getElementById('deleteBtnRadius').value   = customColors.deleteBtnRadius;
+    }
 
-      // &laquo;Удалить&raquo; — красная
-      deleteBtnBgColor.value    = "#ff5555";
-      deleteBtnTextColor.value  = "#ffffff";
+    // ========== 4) ЛОГИКА КНОПОК &laquo;Белая тема&raquo;, &laquo;Чёрная тема&raquo;, &laquo;Применить&raquo;, &laquo;Сбросить&raquo; ==========
+    document.getElementById('whiteThemeButton').addEventListener('click', () => {
+      // Всё светлое, по умолчанию
+      customColors.textInputBg = "#ffffff";
+      customColors.textInputColor = "#000000";
+      customColors.dateInputBg = "#ffffff";
+      customColors.dateInputColor = "#000000";
+      customColors.timeInputBg = "#ffffff";
+      customColors.timeInputColor = "#000000";
+      customColors.categoryBg = "#ffffff";
+      customColors.categoryColor = "#000000";
+      customColors.repeatBg = "#ffffff";
+      customColors.repeatColor = "#000000";
+      customColors.langBg   = "#ffffff";
+      customColors.langColor= "#000000";
 
-      // &laquo;Тема&raquo; — сероватая
-      themeBtnBgColor.value     = "#888888";
-      themeBtnTextColor.value   = "#ffffff";
+      customColors.addBtnBg       = "#ffffff";
+      customColors.addBtnText     = "#000000";
+      customColors.addBtnRadius   = 4;
+      customColors.deleteBtnBg    = "#ff5555";
+      customColors.deleteBtnText  = "#ffffff";
+      customColors.deleteBtnRadius= 4;
+
+      // Обновим поля
+      initColorPickers();
+      applyCustomColors();
     });
-    blackThemeButton.addEventListener('click', () => {
-      // Полностью тёмный пресет
-      bodyBgColor.value         = "#222222";
-      bodyTextColor.value       = "#eeeeee";
-      panelBgColor.value        = "#333333";
-      itemBgColor.value         = "#444444";
-      panelTextColor.value      = "#ffffff";
 
-      addBtnBgColor.value       = "#555555";
-      addBtnTextColor.value     = "#ffffff";
+    document.getElementById('blackThemeButton').addEventListener('click', () => {
+      // Тёмная схема
+      customColors.textInputBg = "#333333";
+      customColors.textInputColor = "#ffffff";
+      customColors.dateInputBg = "#333333";
+      customColors.dateInputColor = "#ffffff";
+      customColors.timeInputBg = "#333333";
+      customColors.timeInputColor = "#ffffff";
+      customColors.categoryBg = "#333333";
+      customColors.categoryColor = "#ffffff";
+      customColors.repeatBg = "#333333";
+      customColors.repeatColor = "#ffffff";
+      customColors.langBg   = "#333333";
+      customColors.langColor= "#ffffff";
 
-      deleteBtnBgColor.value    = "#aa0000";
-      deleteBtnTextColor.value  = "#ffffff";
+      customColors.addBtnBg       = "#555555";
+      customColors.addBtnText     = "#ffffff";
+      customColors.addBtnRadius   = 20;
+      customColors.deleteBtnBg    = "#aa0000";
+      customColors.deleteBtnText  = "#ffffff";
+      customColors.deleteBtnRadius= 20;
 
-      themeBtnBgColor.value     = "#666666";
-      themeBtnTextColor.value   = "#ffffff";
+      initColorPickers();
+      applyCustomColors();
     });
 
-    // ============== 6) &laquo;ПРИМЕНИТЬ&raquo; / &laquo;СБРОСИТЬ&raquo; ==============
-    saveCustomTheme.addEventListener('click', () => {
-      customColors.bodyBg       = bodyBgColor.value;
-      customColors.bodyText     = bodyTextColor.value;
-      customColors.panelBg      = panelBgColor.value;
-      customColors.itemBg       = itemBgColor.value;
-      customColors.panelText    = panelTextColor.value;
-      customColors.addBtnBg     = addBtnBgColor.value;
-      customColors.addBtnText   = addBtnTextColor.value;
-      customColors.deleteBtnBg  = deleteBtnBgColor.value;
-      customColors.deleteBtnText= deleteBtnTextColor.value;
-      customColors.themeBtnBg   = themeBtnBgColor.value;
-      customColors.themeBtnText = themeBtnTextColor.value;
+    document.getElementById('saveCustomTheme').addEventListener('click', () => {
+      // Читаем все поля
+      customColors.textInputBg    = document.getElementById('textInputBg').value;
+      customColors.textInputColor = document.getElementById('textInputColor').value;
+      customColors.dateInputBg    = document.getElementById('dateInputBg').value;
+      customColors.dateInputColor = document.getElementById('dateInputColor').value;
+      customColors.timeInputBg    = document.getElementById('timeInputBg').value;
+      customColors.timeInputColor = document.getElementById('timeInputColor').value;
+      customColors.categoryBg     = document.getElementById('categoryBg').value;
+      customColors.categoryColor  = document.getElementById('categoryColor').value;
+      customColors.repeatBg       = document.getElementById('repeatBg').value;
+      customColors.repeatColor    = document.getElementById('repeatColor').value;
+      customColors.langBg         = document.getElementById('langBg').value;
+      customColors.langColor      = document.getElementById('langColor').value;
+
+      customColors.addBtnBg       = document.getElementById('addBtnBgColor').value;
+      customColors.addBtnText     = document.getElementById('addBtnTextColor').value;
+      customColors.addBtnRadius   = parseInt(document.getElementById('addBtnRadius').value) || 0;
+
+      customColors.deleteBtnBg    = document.getElementById('deleteBtnBgColor').value;
+      customColors.deleteBtnText  = document.getElementById('deleteBtnTextColor').value;
+      customColors.deleteBtnRadius= parseInt(document.getElementById('deleteBtnRadius').value) || 0;
 
       saveCustomColors();
       applyCustomColors();
     });
 
-    resetCustomTheme.addEventListener('click', () => {
-      // Полностью сбрасываем в дефолт
+    document.getElementById('resetCustomTheme').addEventListener('click', () => {
       localStorage.removeItem('customColors');
       customColors = loadCustomColors();
       initColorPickers();
       applyCustomColors();
     });
 
-    // ============== 7) ОТОБРАЖЕНИЕ / СКРЫТИЕ ПАНЕЛИ "ТЕМА" ==============
+    // ========== 5) Показ/скрытие панели "Тема" ==============
     let themePanelOpen = false;
+    const themeToggleBtn = document.getElementById('themeToggle');
+    const themePanel     = document.getElementById('themePanel');
     themeToggleBtn.addEventListener('click', () => {
       themePanelOpen = !themePanelOpen;
       themePanel.style.display = themePanelOpen ? 'block' : 'none';
     });
 
-    // ============== 8) НАПОМИНАНИЯ (повтор, таймеры) ==============
+    // ========== 6) Напоминания (как в предыдущих примерах) ==============
     function saveReminders() {
       localStorage.setItem('reminders', JSON.stringify(reminders));
     }
-
     function cancelAllTimers() {
       reminderTimeouts.forEach(id => clearTimeout(id));
       reminderTimeouts = [];
     }
-
     function formatDate(d) {
       let y = d.getFullYear();
-      let m = String(d.getMonth() + 1).padStart(2, '0');
-      let day = String(d.getDate()).padStart(2, '0');
-      return `${y}-${m}-${day}`;
+      let m = String(d.getMonth()+1).padStart(2,'0');
+      let dd= String(d.getDate()).padStart(2,'0');
+      return `${y}-${m}-${dd}`;
     }
     function formatTime(d) {
-      let hh = String(d.getHours()).padStart(2, '0');
-      let mm = String(d.getMinutes()).padStart(2, '0');
+      let hh = String(d.getHours()).padStart(2,'0');
+      let mm = String(d.getMinutes()).padStart(2,'0');
       return `${hh}:${mm}`;
     }
     function addIntervalToDate(dateObj, repeatCode) {
       switch (repeatCode) {
-        case '10m':
-          dateObj.setMinutes(dateObj.getMinutes() + 10);
-          break;
-        case '1h':
-          dateObj.setHours(dateObj.getHours() + 1);
-          break;
-        case '1d':
-          dateObj.setDate(dateObj.getDate() + 1);
-          break;
-        case '1w':
-          dateObj.setDate(dateObj.getDate() + 7);
-          break;
-        case '1M':
-          dateObj.setMonth(dateObj.getMonth() + 1);
-          break;
+        case '10m': dateObj.setMinutes(dateObj.getMinutes()+10); break;
+        case '1h':  dateObj.setHours(dateObj.getHours()+1);      break;
+        case '1d':  dateObj.setDate(dateObj.getDate()+1);        break;
+        case '1w':  dateObj.setDate(dateObj.getDate()+7);        break;
+        case '1M':  dateObj.setMonth(dateObj.getMonth()+1);      break;
       }
     }
     function showNotification(reminder) {
+      // Упрощённая логика уведомления
       if (!("Notification" in window)) {
         alert(reminder.text);
-        return;
-      }
-      if (Notification.permission === "granted") {
+      } else if (Notification.permission === "granted") {
         new Notification("Напоминание", { body: reminder.text });
       } else {
         alert(reminder.text);
       }
     }
 
-    // В этой функции исправляем логику:
-    // - Если время уже прошло, но напоминание повторяемое, двигаем его вперёд,
-    //   пока не найдём момент в будущем.
-    // - Затем ставим setTimeout именно на ту разницу.
     function resetAllTimers() {
       cancelAllTimers();
       const now = new Date();
 
       reminders.forEach(r => {
-        // Если нет даты/времени — нет автосрабатывания
         if (!r.date && !r.time) return;
-
-        let dt = new Date(r.date + 'T' + (r.time || '00:00'));
-
-        // Проверяем, не прошел ли этот момент
+        let dt = new Date(r.date + 'T' + (r.time||'00:00'));
+        // Если момент уже прошёл, но есть повтор — двигаем вперёд
         if (dt <= now) {
-          // Если повтора нет — вообще не ставим таймер (оно &laquo;прозевано&raquo;).
-          if (!r.repeat || r.repeat === 'none') {
-            return;
+          if (!r.repeat || r.repeat==='none') {
+            return; // без повтора - пропускаем
           }
-          // Иначе двигаем dt вперёд (шаг за шагом), пока не станет > now
-          while (dt <= now) {
+          while(dt<=now) {
             addIntervalToDate(dt, r.repeat);
           }
-          // Обновляем дату/время в самом напоминании (чтобы при перезагрузке страницы не потерялось)
           r.date = formatDate(dt);
           r.time = formatTime(dt);
           saveReminders();
         }
-
-        // Теперь dt гарантированно в будущем => ставим таймер
-        const diff = dt - new Date();
-        const timerId = setTimeout(() => {
+        let diff = dt - new Date();
+        let timerId = setTimeout(()=>{
           showNotification(r);
-
-          // Повтор?
-          if (r.repeat && r.repeat !== 'none') {
+          // Если есть повтор — сдвигаем дальше
+          if(r.repeat && r.repeat!=='none'){
             let newDT = new Date(dt);
             addIntervalToDate(newDT, r.repeat);
-
             r.date = formatDate(newDT);
             r.time = formatTime(newDT);
             saveReminders();
             resetAllTimers();
           } else {
-            // Удаляем одноразовое
+            // Одноразовое
             const idx = reminders.indexOf(r);
-            if (idx !== -1) {
-              reminders.splice(idx, 1);
+            if(idx!==-1){
+              reminders.splice(idx,1);
               saveReminders();
             }
             renderCategories();
@@ -714,81 +746,80 @@
       });
     }
 
-    // ============== 9) КАТЕГОРИИ ==============
+    // ========== 7) Категории ===========
     function groupByCategory() {
-      // Фиксированные три категории
-      const groups = { "Работа": [], "Личное": [], "Учёба": [] };
-      reminders.forEach(rem => {
-        if (!groups[rem.category]) {
-          groups[rem.category] = [];
+      const groups = {"Работа":[],"Личное":[],"Учёба":[]};
+      reminders.forEach(rem=>{
+        if(!groups[rem.category]){
+          groups[rem.category]=[];
         }
         groups[rem.category].push(rem);
       });
       return groups;
     }
-    function createCategoryPanel(catName, arr) {
-      const t = translations[currentLang];
+
+    function createCategoryPanel(catName, arr){
+      const t = translations[currentLang] || translations.ru;
+
       let label = catName;
-      if (t) {
-        if (catName === "Работа") label = t.work;
-        if (catName === "Личное") label = t.personal;
-        if (catName === "Учёба")  label = t.study;
-      }
+      if(catName==="Работа")  label=t.work;
+      if(catName==="Личное")  label=t.personal;
+      if(catName==="Учёба")   label=t.study;
 
       const panel = document.createElement('div');
-      panel.className = 'category-panel';
+      panel.className='category-panel';
 
       const header = document.createElement('div');
-      header.className = 'category-header';
+      header.className='category-header';
+
       const h2 = document.createElement('h2');
-      h2.textContent = `${label} (${arr.length})`;
+      h2.textContent= `${label} (${arr.length})`;
       const toggleSign = document.createElement('span');
-      toggleSign.textContent = '▼';
+      toggleSign.textContent='▼';
+
       header.appendChild(h2);
       header.appendChild(toggleSign);
 
       const content = document.createElement('div');
-      content.className = 'category-content';
+      content.className='category-content';
 
-      let isOpen = false;
-      header.addEventListener('click', () => {
-        isOpen = !isOpen;
-        content.style.display = isOpen ? 'block' : 'none';
-        toggleSign.textContent = isOpen ? '▲' : '▼';
+      let isOpen=false;
+      header.addEventListener('click',()=>{
+        isOpen=!isOpen;
+        content.style.display=isOpen?'block':'none';
+        toggleSign.textContent=isOpen?'▲':'▼';
       });
 
-      // Напоминания внутри
-      arr.forEach(reminder => {
-        const item = document.createElement('div');
-        item.className = 'reminder-item';
+      arr.forEach(reminder=>{
+        const item=document.createElement('div');
+        item.className='reminder-item';
 
         let txt = reminder.text;
-        let details = [];
-        if (reminder.date) details.push(reminder.date);
-        if (reminder.time) details.push(reminder.time);
-        if (reminder.repeat && reminder.repeat !== 'none') {
-          switch (reminder.repeat) {
-            case '10m': details.push(t ? t.every10m : 'каждые 10 минут'); break;
-            case '1h':  details.push(t ? t.every1h : 'каждый час'); break;
-            case '1d':  details.push(t ? t.every1d : 'каждый день'); break;
-            case '1w':  details.push(t ? t.every1w : 'раз в неделю'); break;
-            case '1M':  details.push(t ? t.every1M : 'каждый месяц'); break;
-          }
+        let details=[];
+        if(reminder.date) details.push(reminder.date);
+        if(reminder.time) details.push(reminder.time);
+
+        if(reminder.repeat && reminder.repeat!=='none'){
+          if(reminder.repeat==='10m') details.push(t.every10m);
+          if(reminder.repeat==='1h')  details.push(t.every1h);
+          if(reminder.repeat==='1d')  details.push(t.every1d);
+          if(reminder.repeat==='1w')  details.push(t.every1w);
+          if(reminder.repeat==='1M')  details.push(t.every1M);
         }
-        if (details.length > 0) {
-          txt += ' (' + details.join(', ') + ')';
+        if(details.length>0){
+          txt += ' ('+details.join(', ')+')';
         }
 
-        const textSpan = document.createElement('span');
-        textSpan.textContent = txt;
+        const textSpan=document.createElement('span');
+        textSpan.textContent=txt;
 
-        const delBtn = document.createElement('button');
-        delBtn.className = 'delete';
-        delBtn.textContent = t ? t.deleteBtn : "Удалить";
-        delBtn.addEventListener('click', () => {
-          const idx = reminders.indexOf(reminder);
-          if (idx !== -1) {
-            reminders.splice(idx, 1);
+        const delBtn=document.createElement('button');
+        delBtn.className='delete';
+        delBtn.textContent=t.deleteBtn;
+        delBtn.addEventListener('click',()=>{
+          const idx=reminders.indexOf(reminder);
+          if(idx!==-1){
+            reminders.splice(idx,1);
             saveReminders();
             resetAllTimers();
             renderCategories();
@@ -804,62 +835,76 @@
       panel.appendChild(content);
       return panel;
     }
-    function renderCategories() {
-      categoriesContainer.innerHTML = '';
-      const groups = groupByCategory();
-      for (let c in groups) {
-        if (groups[c].length > 0) {
-          const panel = createCategoryPanel(c, groups[c]);
-          categoriesContainer.appendChild(panel);
+
+    function renderCategories(){
+      const container=document.getElementById('categoriesContainer');
+      container.innerHTML='';
+      const groups=groupByCategory();
+      for(let c in groups){
+        if(groups[c].length>0){
+          const panel=createCategoryPanel(c,groups[c]);
+          container.appendChild(panel);
         }
       }
-      // Применяем цвета к вновь созданным элементам
-      applyCustomColors();
+      applyCustomColors(); 
     }
 
-    // ============== 10) ДОБАВЛЕНИЕ НАПОМИНАНИЯ ==============
-    addReminderBtn.addEventListener('click', () => {
-      const textValue = reminderTextInput.value.trim();
-      if (!textValue) return;
+    // ========== 8) ДОБАВЛЕНИЕ НАПОМИНАНИЯ ==========
+    document.getElementById('addReminder').addEventListener('click',()=>{
+      const reminderText=document.getElementById('reminderText').value.trim();
+      const dateVal=document.getElementById('reminderDate').value;
+      const timeVal=document.getElementById('reminderTime').value;
+      const catVal=document.getElementById('reminderCategory').value;
+      const repVal=document.getElementById('reminderRepeat').value;
+      if(!reminderText) return;
+
       reminders.push({
-        text: textValue,
-        date: reminderDateInput.value,
-        time: reminderTimeInput.value,
-        category: reminderCategorySel.value,
-        repeat: reminderRepeatSel.value
+        text: reminderText,
+        date: dateVal,
+        time: timeVal,
+        category: catVal,
+        repeat: repVal
       });
       saveReminders();
       resetAllTimers();
       renderCategories();
 
       // Сброс формы
-      reminderTextInput.value = '';
-      reminderDateInput.value = '';
-      reminderTimeInput.value = '';
-      reminderCategorySel.value = 'Работа';
-      reminderRepeatSel.value = 'none';
+      document.getElementById('reminderText').value='';
+      document.getElementById('reminderDate').value='';
+      document.getElementById('reminderTime').value='';
+      document.getElementById('reminderCategory').value='Работа';
+      document.getElementById('reminderRepeat').value='none';
     });
 
-    // ============== 11) ИНИЦИАЛИЗАЦИЯ ПРИ СТАРТЕ ==============
-    document.addEventListener('DOMContentLoaded', () => {
-      // Разрешение на уведомления
-      if ("Notification" in window) {
-        if (Notification.permission === "default") {
+    // ========== 9) ПРИ ЗАГРУЗКЕ СТРАНИЦЫ ==========
+    document.addEventListener('DOMContentLoaded',()=>{
+      // Запрос разрешения на нотификации
+      if("Notification" in window){
+        if(Notification.permission==="default"){
           Notification.requestPermission();
         }
       }
     });
 
-    // Применяем переводы
-    applyTranslations();
+    // Выставляем язык 
+    const langSelect=document.getElementById('languageSelect');
+    langSelect.value=currentLang;
+    langSelect.addEventListener('change',e=>{
+      currentLang=e.target.value;
+      localStorage.setItem('language',currentLang);
+      applyTranslations();
+    });
 
-    // Инициализируем и применяем цвета
+    // Применяем язык и кастомизацию
+    applyTranslations();
     initColorPickers();
     applyCustomColors();
 
-    // Отображаем списки
+    // Рендерим напоминания и таймеры
     renderCategories();
     resetAllTimers();
+
   </script>
 </body>
 </html>
