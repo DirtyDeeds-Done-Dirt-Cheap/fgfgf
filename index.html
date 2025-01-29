@@ -11,7 +11,8 @@
       padding-bottom: 120px;
       transition: background-color 0.3s, color 0.3s;
       background-color: #ffffff;
-      color: #bbbbbb; /* За замовчуванням трохи темніший сірий */
+      /* Текст трохи темно-сірий */
+      color: #bbbbbb;
     }
     h1 {
       margin-bottom: 20px;
@@ -21,11 +22,13 @@
       padding: 6px 10px;
       cursor: pointer;
       transition: background-color 0.3s, color 0.3s;
+      /* Також від початку виставляємо color: #bbbbbb, щоб текст скрізь був однаковий */
+      color: #bbbbbb;
     }
     button.delete {
       background-color: #ff5555;
-      color: #bbbbbb; 
       border: none;
+      color: #bbbbbb;
     }
 
     .row {
@@ -80,6 +83,7 @@
       color: #bbbbbb;
     }
 
+    /* Кнопка &laquo;Тема&raquo; (правий нижній кут) */
     #themeToggle {
       position: fixed;
       right: 20px;
@@ -91,6 +95,7 @@
       border-radius: 4px;
     }
 
+    /* Панель &laquo;Тема&raquo; */
     #themePanel {
       position: fixed;
       bottom: 70px;
@@ -122,6 +127,7 @@
       margin-top: 10px;
     }
 
+    /* Кнопка вибору мови (лівий нижній кут) */
     #languageSelect {
       position: fixed;
       left: 20px;
@@ -186,14 +192,17 @@
 
   <div id="categoriesContainer"></div>
 
+  <!-- Вибір мови (ліворуч внизу) -->
   <select id="languageSelect">
     <option value="ru">Рус</option>
     <option value="en">Eng</option>
     <option value="uk">Укр</option>
   </select>
 
+  <!-- Кнопка &laquo;Тема&raquo; (праворуч внизу) -->
   <button id="themeToggle">Тема</button>
 
+  <!-- Панель налаштування теми -->
   <div id="themePanel">
     <h3 id="themeSettingsTitle">Настройка темы</h3>
 
@@ -337,9 +346,6 @@
   </div>
 
   <script>
-    /* 
-       1) ДАНІ: reminders, language, customColors 
-    */
     let reminders = JSON.parse(localStorage.getItem('reminders')) || [];
     let reminderTimeouts = [];
     let currentLang = localStorage.getItem('language') || 'ru';
@@ -384,6 +390,7 @@
       return JSON.parse(saved);
     }
     let customColors = loadCustomColors();
+
     function saveCustomColors() {
       localStorage.setItem('customColors', JSON.stringify(customColors));
     }
@@ -404,7 +411,6 @@
         personal:"Личное",
         study:"Учёба",
         deleteBtn:"Удалить",
-
         themeSettingsTitle:"Настройка темы",
         labelBodyBgColor:"Цвет фона страницы:",
         labelBodyTextColor:"Цвет текста страницы:",
@@ -421,7 +427,6 @@
         labelRepeatColor:'Цвет текста поля "Повтор":',
         labelLangBg:'Цвет фона списка "Язык":',
         labelLangColor:'Цвет текста списка "Язык":',
-
         labelAddBtnBgColor:'Цвет фона кнопки &laquo;Добавить&raquo;:',
         labelAddBtnTextColor:'Цвет текста кнопки &laquo;Добавить&raquo;:',
         labelAddBtnShape:'Форма кнопки &laquo;Добавить&raquo;:',
@@ -431,10 +436,8 @@
         labelThemeBtnBgColor:'Цвет фона кнопки &laquo;Тема&raquo;:',
         labelThemeBtnTextColor:'Цвет текста кнопки &laquo;Тема&raquo;:',
         labelThemeBtnShape:'Форма кнопки &laquo;Тема&raquo;:',
-
         labelItemBgColor:'Цвет фона "Напоминания":',
         labelItemTextColor:'Цвет текста "Напоминания":',
-
         whiteThemeButton:"Белая тема",
         blackThemeButton:"Чёрная тема",
         saveCustomTheme:"Применить",
@@ -455,7 +458,6 @@
         personal:"Personal",
         study:"Study",
         deleteBtn:"Delete",
-
         themeSettingsTitle:"Theme Settings",
         labelBodyBgColor:"Page background color:",
         labelBodyTextColor:"Page text color:",
@@ -472,7 +474,6 @@
         labelRepeatColor:'Text color of "Repeat":',
         labelLangBg:'Bg of "Language":',
         labelLangColor:'Color of "Language":',
-
         labelAddBtnBgColor:'"Add" button bg:',
         labelAddBtnTextColor:'"Add" button text:',
         labelAddBtnShape:'"Add" button shape:',
@@ -482,10 +483,8 @@
         labelThemeBtnBgColor:'"Theme" button bg:',
         labelThemeBtnTextColor:'"Theme" button text:',
         labelThemeBtnShape:'"Theme" button shape:',
-
         labelItemBgColor:'Reminder background:',
         labelItemTextColor:'Reminder text color:',
-
         whiteThemeButton:"White theme",
         blackThemeButton:"Black theme",
         saveCustomTheme:"Apply",
@@ -506,7 +505,6 @@
         personal:"Особисте",
         study:"Навчання",
         deleteBtn:"Видалити",
-
         themeSettingsTitle:"Налаштування теми",
         labelBodyBgColor:"Колір фону сторінки:",
         labelBodyTextColor:"Колір тексту сторінки:",
@@ -523,7 +521,6 @@
         labelRepeatColor:'Текст поля "Повтор":',
         labelLangBg:'Фон списку "Мова":',
         labelLangColor:'Колір списку "Мова":',
-
         labelAddBtnBgColor:'Фон кнопки &laquo;Додати&raquo;:',
         labelAddBtnTextColor:'Текст кнопки &laquo;Додати&raquo;:',
         labelAddBtnShape:'Форма кнопки &laquo;Додати&raquo;:',
@@ -533,10 +530,8 @@
         labelThemeBtnBgColor:'Фон кнопки &laquo;Тема&raquo;:',
         labelThemeBtnTextColor:'Текст кнопки &laquo;Тема&raquo;:',
         labelThemeBtnShape:'Форма кнопки &laquo;Тема&raquo;:',
-
         labelItemBgColor:'Фон "Нагадування":',
         labelItemTextColor:'Текст "Нагадування":',
-
         whiteThemeButton:"Біла тема",
         blackThemeButton:"Чорна тема",
         saveCustomTheme:"Застосувати",
@@ -551,7 +546,7 @@
       document.getElementById('addReminder').textContent   = t.addBtn;
       document.getElementById('themeToggle').textContent   = t.themeBtn;
 
-      const repSel = document.getElementById('reminderRepeat');
+      const repSel=document.getElementById('reminderRepeat');
       repSel.options[0].text = t.repeatNone;
       repSel.options[1].text = t.every10m;
       repSel.options[2].text = t.every1h;
@@ -559,41 +554,41 @@
       repSel.options[4].text = t.every1w;
       repSel.options[5].text = t.every1M;
 
-      const catSel = document.getElementById('reminderCategory');
+      const catSel=document.getElementById('reminderCategory');
       catSel.options[0].text = t.work;
       catSel.options[1].text = t.personal;
       catSel.options[2].text = t.study;
 
       document.getElementById('themeSettingsTitle').textContent = t.themeSettingsTitle;
-      document.getElementById('labelBodyBgColor').firstChild.textContent    = t.labelBodyBgColor + " ";
-      document.getElementById('labelBodyTextColor').firstChild.textContent  = t.labelBodyTextColor + " ";
-      document.getElementById('labelFieldShape').firstChild.textContent     = t.labelFieldShape + ":";
+      document.getElementById('labelBodyBgColor').firstChild.textContent    = t.labelBodyBgColor+" ";
+      document.getElementById('labelBodyTextColor').firstChild.textContent  = t.labelBodyTextColor+" ";
+      document.getElementById('labelFieldShape').firstChild.textContent     = t.labelFieldShape+":";
 
-      document.getElementById('labelTextInputBg').firstChild.textContent    = t.labelTextInputBg + " ";
-      document.getElementById('labelTextInputColor').firstChild.textContent = t.labelTextInputColor + " ";
-      document.getElementById('labelDateInputBg').firstChild.textContent    = t.labelDateInputBg + " ";
-      document.getElementById('labelDateInputColor').firstChild.textContent = t.labelDateInputColor + " ";
-      document.getElementById('labelTimeInputBg').firstChild.textContent    = t.labelTimeInputBg + " ";
-      document.getElementById('labelTimeInputColor').firstChild.textContent = t.labelTimeInputColor + " ";
-      document.getElementById('labelCategoryBg').firstChild.textContent     = t.labelCategoryBg + " ";
-      document.getElementById('labelCategoryColor').firstChild.textContent  = t.labelCategoryColor + " ";
-      document.getElementById('labelRepeatBg').firstChild.textContent       = t.labelRepeatBg + " ";
-      document.getElementById('labelRepeatColor').firstChild.textContent    = t.labelRepeatColor + " ";
-      document.getElementById('labelLangBg').firstChild.textContent         = t.labelLangBg + " ";
-      document.getElementById('labelLangColor').firstChild.textContent      = t.labelLangColor + " ";
+      document.getElementById('labelTextInputBg').firstChild.textContent    = t.labelTextInputBg+" ";
+      document.getElementById('labelTextInputColor').firstChild.textContent = t.labelTextInputColor+" ";
+      document.getElementById('labelDateInputBg').firstChild.textContent    = t.labelDateInputBg+" ";
+      document.getElementById('labelDateInputColor').firstChild.textContent = t.labelDateInputColor+" ";
+      document.getElementById('labelTimeInputBg').firstChild.textContent    = t.labelTimeInputBg+" ";
+      document.getElementById('labelTimeInputColor').firstChild.textContent = t.labelTimeInputColor+" ";
+      document.getElementById('labelCategoryBg').firstChild.textContent     = t.labelCategoryBg+" ";
+      document.getElementById('labelCategoryColor').firstChild.textContent  = t.labelCategoryColor+" ";
+      document.getElementById('labelRepeatBg').firstChild.textContent       = t.labelRepeatBg+" ";
+      document.getElementById('labelRepeatColor').firstChild.textContent    = t.labelRepeatColor+" ";
+      document.getElementById('labelLangBg').firstChild.textContent         = t.labelLangBg+" ";
+      document.getElementById('labelLangColor').firstChild.textContent      = t.labelLangColor+" ";
 
-      document.getElementById('labelAddBtnBgColor').firstChild.textContent     = t.labelAddBtnBgColor + " ";
-      document.getElementById('labelAddBtnTextColor').firstChild.textContent   = t.labelAddBtnTextColor + " ";
-      document.getElementById('labelAddBtnShape').firstChild.textContent       = t.labelAddBtnShape + ":";
-      document.getElementById('labelDeleteBtnBgColor').firstChild.textContent  = t.labelDeleteBtnBgColor + " ";
-      document.getElementById('labelDeleteBtnTextColor').firstChild.textContent= t.labelDeleteBtnTextColor + " ";
-      document.getElementById('labelDeleteBtnShape').firstChild.textContent    = t.labelDeleteBtnShape + ":";
-      document.getElementById('labelThemeBtnBgColor').firstChild.textContent   = t.labelThemeBtnBgColor + " ";
-      document.getElementById('labelThemeBtnTextColor').firstChild.textContent = t.labelThemeBtnTextColor + " ";
-      document.getElementById('labelThemeBtnShape').firstChild.textContent     = t.labelThemeBtnShape + ":";
+      document.getElementById('labelAddBtnBgColor').firstChild.textContent     = t.labelAddBtnBgColor+" ";
+      document.getElementById('labelAddBtnTextColor').firstChild.textContent   = t.labelAddBtnTextColor+" ";
+      document.getElementById('labelAddBtnShape').firstChild.textContent       = t.labelAddBtnShape+":";
+      document.getElementById('labelDeleteBtnBgColor').firstChild.textContent  = t.labelDeleteBtnBgColor+" ";
+      document.getElementById('labelDeleteBtnTextColor').firstChild.textContent= t.labelDeleteBtnTextColor+" ";
+      document.getElementById('labelDeleteBtnShape').firstChild.textContent    = t.labelDeleteBtnShape+":";
+      document.getElementById('labelThemeBtnBgColor').firstChild.textContent   = t.labelThemeBtnBgColor+" ";
+      document.getElementById('labelThemeBtnTextColor').firstChild.textContent = t.labelThemeBtnTextColor+" ";
+      document.getElementById('labelThemeBtnShape').firstChild.textContent     = t.labelThemeBtnShape+":";
 
-      document.getElementById('labelItemBgColor').firstChild.textContent       = t.labelItemBgColor + " ";
-      document.getElementById('labelItemTextColor').firstChild.textContent     = t.labelItemTextColor + " ";
+      document.getElementById('labelItemBgColor').firstChild.textContent       = t.labelItemBgColor+" ";
+      document.getElementById('labelItemTextColor').firstChild.textContent     = t.labelItemTextColor+" ";
 
       document.getElementById('whiteThemeButton').textContent = t.whiteThemeButton;
       document.getElementById('blackThemeButton').textContent = t.blackThemeButton;
@@ -604,12 +599,12 @@
     }
 
     function initColorPickers() {
-      document.getElementById('bodyBgColor').value    = customColors.bodyBg;
-      document.getElementById('bodyTextColor').value  = customColors.bodyText;
+      document.getElementById('bodyBgColor').value   = customColors.bodyBg;
+      document.getElementById('bodyTextColor').value = customColors.bodyText;
 
-      const fieldShapes = document.getElementsByName('fieldShape');
+      const fieldShapes=document.getElementsByName('fieldShape');
       for(let r of fieldShapes){
-        r.checked = (r.value === customColors.fieldShape);
+        r.checked=(r.value===customColors.fieldShape);
       }
 
       document.getElementById('textInputBg').value    = customColors.textInputBg;
@@ -629,21 +624,21 @@
       document.getElementById('addBtnTextColor').value = customColors.addBtnText;
       const addShapes=document.getElementsByName('addBtnShape');
       for(let r of addShapes){
-        r.checked = (r.value === customColors.addBtnShape);
+        r.checked=(r.value===customColors.addBtnShape);
       }
 
       document.getElementById('deleteBtnBgColor').value   = customColors.deleteBtnBg;
       document.getElementById('deleteBtnTextColor').value = customColors.deleteBtnText;
       const delShapes=document.getElementsByName('deleteBtnShape');
       for(let r of delShapes){
-        r.checked = (r.value === customColors.deleteBtnShape);
+        r.checked=(r.value===customColors.deleteBtnShape);
       }
 
       document.getElementById('themeBtnBgColor').value    = customColors.themeBtnBg;
       document.getElementById('themeBtnTextColor').value  = customColors.themeBtnText;
       const themeShapes=document.getElementsByName('themeBtnShape');
       for(let r of themeShapes){
-        r.checked = (r.value === customColors.themeBtnShape);
+        r.checked=(r.value===customColors.themeBtnShape);
       }
 
       document.getElementById('itemBgColor').value   = customColors.itemBg;
@@ -652,46 +647,56 @@
 
     function applyCustomColors() {
       document.body.style.backgroundColor = customColors.bodyBg;
-      document.body.style.color           = "#bbbbbb"; /* Не змінюємо, лишається трохи темно-сірим */
+      /* Колір тексту тіла беремо з customColors.bodyText */
+      document.body.style.color = customColors.bodyText;
 
-      const fieldBorderRadius = (customColors.fieldShape==="round") ? "30px" : "0px";
+      const fieldBorderRadius = (customColors.fieldShape==="round")?"30px":"0px";
 
-      const txtInput = document.getElementById('reminderText');
+      const txtInput=document.getElementById('reminderText');
       txtInput.style.backgroundColor = customColors.textInputBg;
+      txtInput.style.color           = customColors.textInputColor;
       txtInput.style.borderRadius    = fieldBorderRadius;
 
-      const dInput = document.getElementById('reminderDate');
+      const dInput=document.getElementById('reminderDate');
       dInput.style.backgroundColor   = customColors.dateInputBg;
+      dInput.style.color             = customColors.dateInputColor;
       dInput.style.borderRadius      = fieldBorderRadius;
 
-      const tInput = document.getElementById('reminderTime');
+      const tInput=document.getElementById('reminderTime');
       tInput.style.backgroundColor   = customColors.timeInputBg;
+      tInput.style.color             = customColors.timeInputColor;
       tInput.style.borderRadius      = fieldBorderRadius;
 
-      const catSelect = document.getElementById('reminderCategory');
+      const catSelect=document.getElementById('reminderCategory');
       catSelect.style.backgroundColor= customColors.categoryBg;
+      catSelect.style.color          = customColors.categoryColor;
       catSelect.style.borderRadius   = fieldBorderRadius;
 
-      const repSelect = document.getElementById('reminderRepeat');
+      const repSelect=document.getElementById('reminderRepeat');
       repSelect.style.backgroundColor= customColors.repeatBg;
+      repSelect.style.color          = customColors.repeatColor;
       repSelect.style.borderRadius   = fieldBorderRadius;
 
-      const langSel = document.getElementById('languageSelect');
+      const langSel=document.getElementById('languageSelect');
       langSel.style.backgroundColor  = customColors.langBg;
+      langSel.style.color            = customColors.langColor;
       langSel.style.borderRadius     = fieldBorderRadius;
 
-      const addBtn = document.getElementById('addReminder');
+      const addBtn=document.getElementById('addReminder');
       addBtn.style.backgroundColor   = customColors.addBtnBg;
-      addBtn.style.borderRadius      = (customColors.addBtnShape==="round") ? "30px" : "0px";
+      addBtn.style.color             = customColors.addBtnText;
+      addBtn.style.borderRadius      = (customColors.addBtnShape==="round")?"30px":"0px";
 
-      document.querySelectorAll('button.delete').forEach(del=>{
-        del.style.backgroundColor = customColors.deleteBtnBg;
-        del.style.borderRadius    = (customColors.deleteBtnShape==="round") ? "30px" : "0px";
+      document.querySelectorAll('button.delete').forEach(delBtn=>{
+        delBtn.style.backgroundColor = customColors.deleteBtnBg;
+        delBtn.style.color           = customColors.deleteBtnText;
+        delBtn.style.borderRadius    = (customColors.deleteBtnShape==="round")?"30px":"0px";
       });
 
-      const themeBtn = document.getElementById('themeToggle');
+      const themeBtn=document.getElementById('themeToggle');
       themeBtn.style.backgroundColor = customColors.themeBtnBg;
-      themeBtn.style.borderRadius    = (customColors.themeBtnShape==="round") ? "30px" : "0px";
+      themeBtn.style.color           = customColors.themeBtnText;
+      themeBtn.style.borderRadius    = (customColors.themeBtnShape==="round")?"30px":"0px";
 
       document.querySelectorAll('.reminder-item').forEach(item=>{
         item.style.backgroundColor = customColors.itemBg;
@@ -701,21 +706,34 @@
 
     document.getElementById('whiteThemeButton').addEventListener('click',()=>{
       customColors.bodyBg    = "#ffffff";
-      /* не чіпаємо customColors.bodyText */
-      customColors.fieldShape= "rect";
+      /* color тексту не змінюємо */
+      customColors.fieldShape="rect";
 
       customColors.textInputBg="#ffffff";
+      customColors.textInputColor="#bbbbbb";
       customColors.dateInputBg="#ffffff";
+      customColors.dateInputColor="#bbbbbb";
       customColors.timeInputBg="#ffffff";
+      customColors.timeInputColor="#bbbbbb";
       customColors.categoryBg="#ffffff";
+      customColors.categoryColor="#bbbbbb";
       customColors.repeatBg="#ffffff";
-      /* langBg залишається як було, або можна виставити #444444 */
+      customColors.repeatColor="#bbbbbb";
+
+      /* припустимо, список мови так само */
+      customColors.langBg="#444444";
+      customColors.langColor="#bbbbbb";
 
       customColors.addBtnBg="#ffffff";
+      customColors.addBtnText="#bbbbbb";
       customColors.addBtnShape="rect";
+
       customColors.deleteBtnBg="#ff5555";
+      customColors.deleteBtnText="#bbbbbb";
       customColors.deleteBtnShape="rect";
+
       customColors.themeBtnBg="#888888";
+      customColors.themeBtnText="#bbbbbb";
       customColors.themeBtnShape="rect";
 
       customColors.itemBg="#fafafa";
@@ -727,20 +745,31 @@
 
     document.getElementById('blackThemeButton').addEventListener('click',()=>{
       customColors.bodyBg="#000000";
-      /* не чіпаємо customColors.bodyText */
       customColors.fieldShape="round";
 
       customColors.textInputBg="#333333";
+      customColors.textInputColor="#bbbbbb";
       customColors.dateInputBg="#333333";
+      customColors.dateInputColor="#bbbbbb";
       customColors.timeInputBg="#333333";
+      customColors.timeInputColor="#bbbbbb";
       customColors.categoryBg="#333333";
+      customColors.categoryColor="#bbbbbb";
       customColors.repeatBg="#333333";
+      customColors.repeatColor="#bbbbbb";
+      customColors.langBg="#333333";
+      customColors.langColor="#bbbbbb";
 
       customColors.addBtnBg="#555555";
+      customColors.addBtnText="#bbbbbb";
       customColors.addBtnShape="round";
+
       customColors.deleteBtnBg="#aa0000";
+      customColors.deleteBtnText="#bbbbbb";
       customColors.deleteBtnShape="round";
+
       customColors.themeBtnBg="#666666";
+      customColors.themeBtnText="#bbbbbb";
       customColors.themeBtnShape="round";
 
       customColors.itemBg="#666666";
@@ -751,51 +780,50 @@
     });
 
     document.getElementById('saveCustomTheme').addEventListener('click',()=>{
-      customColors.bodyBg = document.getElementById('bodyBgColor').value;
-      /* якщо треба враховувати bodyText - візьмемо його теж */
-      customColors.bodyText = document.getElementById('bodyTextColor').value;
+      customColors.bodyBg      = document.getElementById('bodyBgColor').value;
+      customColors.bodyText    = document.getElementById('bodyTextColor').value;
 
       const fieldShapes=document.getElementsByName('fieldShape');
       for(let r of fieldShapes){
         if(r.checked) customColors.fieldShape=r.value;
       }
 
-      customColors.textInputBg = document.getElementById('textInputBg').value;
+      customColors.textInputBg    = document.getElementById('textInputBg').value;
       customColors.textInputColor = document.getElementById('textInputColor').value;
-      customColors.dateInputBg = document.getElementById('dateInputBg').value;
+      customColors.dateInputBg    = document.getElementById('dateInputBg').value;
       customColors.dateInputColor = document.getElementById('dateInputColor').value;
-      customColors.timeInputBg = document.getElementById('timeInputBg').value;
+      customColors.timeInputBg    = document.getElementById('timeInputBg').value;
       customColors.timeInputColor = document.getElementById('timeInputColor').value;
-      customColors.categoryBg = document.getElementById('categoryBg').value;
-      customColors.categoryColor = document.getElementById('categoryColor').value;
-      customColors.repeatBg = document.getElementById('repeatBg').value;
-      customColors.repeatColor = document.getElementById('repeatColor').value;
-      customColors.langBg = document.getElementById('langBg').value;
-      customColors.langColor = document.getElementById('langColor').value;
+      customColors.categoryBg     = document.getElementById('categoryBg').value;
+      customColors.categoryColor  = document.getElementById('categoryColor').value;
+      customColors.repeatBg       = document.getElementById('repeatBg').value;
+      customColors.repeatColor    = document.getElementById('repeatColor').value;
+      customColors.langBg         = document.getElementById('langBg').value;
+      customColors.langColor      = document.getElementById('langColor').value;
 
-      customColors.addBtnBg = document.getElementById('addBtnBgColor').value;
-      customColors.addBtnText = document.getElementById('addBtnTextColor').value;
+      customColors.addBtnBg       = document.getElementById('addBtnBgColor').value;
+      customColors.addBtnText     = document.getElementById('addBtnTextColor').value;
       const addShapes=document.getElementsByName('addBtnShape');
       for(let r of addShapes){
         if(r.checked) customColors.addBtnShape=r.value;
       }
 
-      customColors.deleteBtnBg = document.getElementById('deleteBtnBgColor').value;
-      customColors.deleteBtnText = document.getElementById('deleteBtnTextColor').value;
+      customColors.deleteBtnBg    = document.getElementById('deleteBtnBgColor').value;
+      customColors.deleteBtnText  = document.getElementById('deleteBtnTextColor').value;
       const delShapes=document.getElementsByName('deleteBtnShape');
       for(let r of delShapes){
         if(r.checked) customColors.deleteBtnShape=r.value;
       }
 
-      customColors.themeBtnBg = document.getElementById('themeBtnBgColor').value;
-      customColors.themeBtnText = document.getElementById('themeBtnTextColor').value;
+      customColors.themeBtnBg     = document.getElementById('themeBtnBgColor').value;
+      customColors.themeBtnText   = document.getElementById('themeBtnTextColor').value;
       const themeShapes=document.getElementsByName('themeBtnShape');
       for(let r of themeShapes){
         if(r.checked) customColors.themeBtnShape=r.value;
       }
 
-      customColors.itemBg = document.getElementById('itemBgColor').value;
-      customColors.itemText = document.getElementById('itemTextColor').value;
+      customColors.itemBg         = document.getElementById('itemBgColor').value;
+      customColors.itemText       = document.getElementById('itemTextColor').value;
 
       saveCustomColors();
       applyCustomColors();
@@ -819,7 +847,7 @@
     function saveReminders(){
       localStorage.setItem('reminders', JSON.stringify(reminders));
     }
-    let reminderTimeouts = [];
+
     function cancelAllTimers(){
       reminderTimeouts.forEach(id=>clearTimeout(id));
       reminderTimeouts=[];
@@ -835,17 +863,17 @@
       let mm=String(d.getMinutes()).padStart(2,'0');
       return `${hh}:${mm}`;
     }
-    function addIntervalToDate(dt,repeat){
+    function addIntervalToDate(dt, repeat){
       switch(repeat){
-        case '10m': dt.setMinutes(dt.getMinutes()+10);break;
-        case '1h':  dt.setHours(dt.getHours()+1);break;
-        case '1d':  dt.setDate(dt.getDate()+1);break;
-        case '1w':  dt.setDate(dt.getDate()+7);break;
-        case '1M':  dt.setMonth(dt.getMonth()+1);break;
+        case '10m': dt.setMinutes(dt.getMinutes()+10); break;
+        case '1h':  dt.setHours(dt.getHours()+1); break;
+        case '1d':  dt.setDate(dt.getDate()+1); break;
+        case '1w':  dt.setDate(dt.getDate()+7); break;
+        case '1M':  dt.setMonth(dt.getMonth()+1); break;
       }
     }
     function showNotification(r){
-      if(!("Notification" in window)) {
+      if(!("Notification" in window)){
         alert(r.text);
       } else if(Notification.permission==="granted"){
         new Notification("Напоминание",{body:r.text});
@@ -888,7 +916,7 @@
             }
             renderCategories();
           }
-        },diff);
+        }, diff);
         reminderTimeouts.push(tid);
       });
     }
@@ -944,11 +972,11 @@
         if(reminder.time) details.push(reminder.time);
         if(reminder.repeat&&reminder.repeat!=='none'){
           switch(reminder.repeat){
-            case '10m': details.push(t.every10m);break;
-            case '1h':  details.push(t.every1h); break;
-            case '1d':  details.push(t.every1d); break;
-            case '1w':  details.push(t.every1w); break;
-            case '1M':  details.push(t.every1M); break;
+            case '10m': details.push(t.every10m); break;
+            case '1h':  details.push(t.every1h);  break;
+            case '1d':  details.push(t.every1d);  break;
+            case '1w':  details.push(t.every1w);  break;
+            case '1M':  details.push(t.every1M);  break;
           }
         }
         if(details.length>0){
@@ -986,7 +1014,7 @@
       const groups=groupByCategory();
       for(let c in groups){
         if(groups[c].length>0){
-          const panel=createCategoryPanel(c,groups[c]);
+          const panel=createCategoryPanel(c, groups[c]);
           container.appendChild(panel);
         }
       }
