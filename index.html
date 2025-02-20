@@ -11,7 +11,7 @@
       padding-bottom: 120px;
       transition: background-color 0.3s, color 0.3s;
       background-color: #ffffff;
-      /* Текст трохи темно-сірий */
+      
       color: #bbbbbb;
     }
     h1 {
@@ -22,7 +22,7 @@
       padding: 6px 10px;
       cursor: pointer;
       transition: background-color 0.3s, color 0.3s;
-      /* Також від початку виставляємо color: #bbbbbb, щоб текст скрізь був однаковий */
+      
       color: #bbbbbb;
     }
     button.delete {
@@ -83,7 +83,7 @@
       color: #bbbbbb;
     }
 
-    /* Кнопка &laquo;Тема&raquo; (правий нижній кут) */
+    
     #themeToggle {
       position: fixed;
       right: 20px;
@@ -95,7 +95,7 @@
       border-radius: 4px;
     }
 
-    /* Панель &laquo;Тема&raquo; */
+    
     #themePanel {
       position: fixed;
       bottom: 70px;
@@ -127,7 +127,7 @@
       margin-top: 10px;
     }
 
-    /* Кнопка вибору мови (лівий нижній кут) */
+    
     #languageSelect {
       position: fixed;
       left: 20px;
@@ -192,17 +192,17 @@
 
   <div id="categoriesContainer"></div>
 
-  <!-- Вибір мови (ліворуч внизу) -->
+  
   <select id="languageSelect">
     <option value="ru">Рус</option>
     <option value="en">Eng</option>
     <option value="uk">Укр</option>
   </select>
 
-  <!-- Кнопка &laquo;Тема&raquo; (праворуч внизу) -->
+  
   <button id="themeToggle">Тема</button>
 
-  <!-- Панель налаштування теми -->
+  
   <div id="themePanel">
     <h3 id="themeSettingsTitle">Настройка темы</h3>
 
@@ -647,7 +647,7 @@
 
     function applyCustomColors() {
       document.body.style.backgroundColor = customColors.bodyBg;
-      /* Колір тексту тіла беремо з customColors.bodyText */
+      
       document.body.style.color = customColors.bodyText;
 
       const fieldBorderRadius = (customColors.fieldShape==="round")?"30px":"0px";
@@ -706,7 +706,7 @@
 
     document.getElementById('whiteThemeButton').addEventListener('click',()=>{
       customColors.bodyBg    = "#ffffff";
-      /* color тексту не змінюємо */
+      
       customColors.fieldShape="rect";
 
       customColors.textInputBg="#ffffff";
@@ -720,7 +720,7 @@
       customColors.repeatBg="#ffffff";
       customColors.repeatColor="#bbbbbb";
 
-      /* припустимо, список мови так само */
+      
       customColors.langBg="#444444";
       customColors.langColor="#bbbbbb";
 
